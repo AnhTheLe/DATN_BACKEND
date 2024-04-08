@@ -2,6 +2,7 @@ package com.projectcnw.salesmanagement.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

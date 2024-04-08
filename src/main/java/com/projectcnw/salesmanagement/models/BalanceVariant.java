@@ -1,5 +1,6 @@
 package com.projectcnw.salesmanagement.models;
 
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

@@ -1,6 +1,6 @@
 package com.projectcnw.salesmanagement.dto.orderDtos;
 
-import com.projectcnw.salesmanagement.models.Variant;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 
 
 import lombok.Getter;

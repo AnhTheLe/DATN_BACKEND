@@ -1,5 +1,6 @@
 package com.projectcnw.salesmanagement.models;
 
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.keys.ImportItemKey;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

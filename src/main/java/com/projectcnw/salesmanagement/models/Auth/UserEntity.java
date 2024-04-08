@@ -59,6 +59,7 @@ public class UserEntity extends BaseEntity implements UserDetails {
     private List<Role> roles;
 
     @OneToMany(mappedBy = "userEntity")
+    @JsonIgnore
     private List<WarehouseBalance> warehouseBalanceList;
 
     @ManyToOne

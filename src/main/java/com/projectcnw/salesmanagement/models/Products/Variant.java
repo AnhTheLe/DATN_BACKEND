@@ -1,6 +1,8 @@
-package com.projectcnw.salesmanagement.models;
+package com.projectcnw.salesmanagement.models.Products;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.projectcnw.salesmanagement.models.BaseEntity;
+import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

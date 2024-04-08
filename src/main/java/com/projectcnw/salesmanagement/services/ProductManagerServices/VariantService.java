@@ -6,14 +6,13 @@ import com.projectcnw.salesmanagement.dto.productDtos.ILastIdVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.IVariantDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
-import com.projectcnw.salesmanagement.models.BaseProduct;
-import com.projectcnw.salesmanagement.models.Variant;
+import com.projectcnw.salesmanagement.models.Products.BaseProduct;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.VariantRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

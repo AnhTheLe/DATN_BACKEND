@@ -11,6 +11,7 @@ import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
 import com.projectcnw.salesmanagement.models.*;
 import com.projectcnw.salesmanagement.models.Auth.UserEntity;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.OrderType;
 import com.projectcnw.salesmanagement.models.enums.PaymentMethod;
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;

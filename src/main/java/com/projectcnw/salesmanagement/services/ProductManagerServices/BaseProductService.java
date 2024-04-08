@@ -2,8 +2,8 @@ package com.projectcnw.salesmanagement.services.ProductManagerServices;
 
 import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
-import com.projectcnw.salesmanagement.models.BaseProduct;
-import com.projectcnw.salesmanagement.models.Variant;
+import com.projectcnw.salesmanagement.models.Products.BaseProduct;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.VariantRepository;
 import lombok.RequiredArgsConstructor;

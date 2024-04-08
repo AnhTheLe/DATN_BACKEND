@@ -8,7 +8,7 @@ import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
 import com.projectcnw.salesmanagement.models.Auth.UserEntity;
-import com.projectcnw.salesmanagement.models.Variant;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.WarehouseBalance;
 import com.projectcnw.salesmanagement.repositories.BalanceManagerRepository.BalanceVariantRepository;
 import com.projectcnw.salesmanagement.repositories.BalanceManagerRepository.WarehouseBalanceRepository;

@@ -3,7 +3,7 @@ package com.projectcnw.salesmanagement.repositories.ProductManagerRepository;
 
 import com.projectcnw.salesmanagement.dto.productDtos.ILastIdVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.IVariantDto;
-import com.projectcnw.salesmanagement.models.Variant;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

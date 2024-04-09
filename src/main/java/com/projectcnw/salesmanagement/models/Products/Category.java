@@ -3,6 +3,7 @@ package com.projectcnw.salesmanagement.models.Products;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.projectcnw.salesmanagement.models.BaseEntity;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
+import com.projectcnw.salesmanagement.models.Promotion;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +27,12 @@ public class Category extends BaseEntity {
     )
     @JsonManagedReference
     private List<BaseProduct> products;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "promotion_category",
+            joinColumns = @JoinColumn(name = "category_id"),
+            inverseJoinColumns = @JoinColumn(name = "promotion_id")
+    )
+    private List<Promotion> promotions;
 }

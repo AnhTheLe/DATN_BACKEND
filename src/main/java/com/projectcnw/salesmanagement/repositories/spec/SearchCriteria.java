@@ -1,4 +1,4 @@
-package com.example.expense_management.repositories.spec;
+package com.projectcnw.salesmanagement.repositories.spec;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -71,6 +71,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PUT, "/admin/base-products/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
                         .requestMatchers(HttpMethod.DELETE, "/admin/base-products/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
 
+                        .requestMatchers(HttpMethod.GET, "/admin/category/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name(), RoleType.SALE.name())
+                        .requestMatchers(HttpMethod.POST, "/admin/category/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
+                        .requestMatchers(HttpMethod.PUT, "/admin/category/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
+                        .requestMatchers(HttpMethod.DELETE, "/admin/category/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
+
                         .requestMatchers(HttpMethod.POST, "/admin/balances/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
                         .requestMatchers(HttpMethod.GET, "/admin/balances/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.WAREHOUSE.name())
 

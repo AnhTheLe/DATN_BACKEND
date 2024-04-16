@@ -16,6 +16,8 @@ public class BaseProductDto extends BaseDto {
     @NotBlank(message = "Tên sản phẩm không được trống")
     private String name;
 
+    private List<Integer> categoryIds;
+
     private String label;
     private int variantNumber;
     private int quantity;

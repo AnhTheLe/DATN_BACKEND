@@ -6,21 +6,22 @@ import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
 import com.projectcnw.salesmanagement.models.enums.PromotionPolicyApplyType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Getter
 @Entity
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Promotion extends BaseEntity{
     private String title;
     private Integer value;
+    private Date startDate;
+    private Date endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "value_type")

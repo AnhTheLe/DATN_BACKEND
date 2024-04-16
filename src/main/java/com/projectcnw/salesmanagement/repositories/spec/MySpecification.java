@@ -1,4 +1,4 @@
-package com.example.expense_management.repositories.spec;
+package com.projectcnw.salesmanagement.repositories.spec;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

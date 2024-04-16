@@ -2,15 +2,14 @@ package com.projectcnw.salesmanagement.controllers.ProductManagerControllers;
 
 import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
-import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.AttributeDto;
+import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.BaseProductService;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,13 +21,18 @@ import java.util.List;
 public class ProductController extends BaseController {
     private final BaseProductService baseProductService;
     private final VariantService variantService;
+
     //
     //viewListProducts
     //lấy danh sách sản phẩm (gồm tồn kho, số phiên bản)
     @GetMapping("/base-products")
     public ResponseEntity<PagedResponseObject> getAllBaseProduct(@RequestParam(name = "page", defaultValue = "1") int page,
-                                                                 @RequestParam(name = "size", defaultValue = "10") int size) {
-
+                                                                 @RequestParam(name = "size", defaultValue = "10") int size,
+                                                                 @RequestParam(name = "query", defaultValue = "") String query,
+                                                                 @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
+                                                                 @RequestParam(name = "created_at", defaultValue = "") String created_at,
+                                                                 @RequestParam(name = "updated_at", defaultValue = "") String updated_at
+    ) {
         long totalItems = baseProductService.countBaseProduct();
         int totalPages = (int) Math.ceil((double) totalItems / size);
         List<BaseProductDto> products = baseProductService.getAll(page, size);
@@ -62,7 +66,7 @@ public class ProductController extends BaseController {
     //createBaseProduct
     //tạo mới một base-product
     @PostMapping("/base-products")
-    public ResponseEntity<ResponseObject> createBaseProduct(@Valid @RequestBody BaseProductDto baseProductDto){
+    public ResponseEntity<ResponseObject> createBaseProduct(@Valid @RequestBody BaseProductDto baseProductDto) {
         BaseProductDto baseProductDto1 = baseProductService.createBaseProduct(baseProductDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -72,7 +76,7 @@ public class ProductController extends BaseController {
     }
 
     @PutMapping("/base-products/{id}")
-    public ResponseEntity<ResponseObject> updateBaseProduct(@PathVariable("id") int baseId, @RequestBody BaseProductDto baseProductDto){
+    public ResponseEntity<ResponseObject> updateBaseProduct(@PathVariable("id") int baseId, @RequestBody BaseProductDto baseProductDto) {
         BaseProductDto baseProductDto1 = baseProductService.updateBaseProduct(baseId, baseProductDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -82,7 +86,7 @@ public class ProductController extends BaseController {
     }
 
     @PostMapping("/base-products/{id}/variants")
-    public ResponseEntity<ResponseObject> createVariantOfBaseProduct(@PathVariable("id") int baseId,@Valid @RequestBody VariantDto variantDto){
+    public ResponseEntity<ResponseObject> createVariantOfBaseProduct(@PathVariable("id") int baseId, @Valid @RequestBody VariantDto variantDto) {
         VariantDto variantDto1 = variantService.createVariant(baseId, variantDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -90,6 +94,7 @@ public class ProductController extends BaseController {
                 .data(variantDto1)
                 .build());
     }
+
     @GetMapping("/base-products/{baseId}/variants/{variantId}")
     public ResponseEntity<ResponseObject> getVariantById(@PathVariable("baseId") int baseId, @PathVariable("variantId") int variantId) {
         VariantDto variantDto = baseProductService.getVariantById(variantId);
@@ -102,7 +107,7 @@ public class ProductController extends BaseController {
 
 
     @PutMapping("/base-products/{id}/variants")
-    public ResponseEntity<ResponseObject> updateVariantOfBaseProduct(@PathVariable("id") int baseId,@Valid @RequestBody VariantDto variantDto){
+    public ResponseEntity<ResponseObject> updateVariantOfBaseProduct(@PathVariable("id") int baseId, @Valid @RequestBody VariantDto variantDto) {
         VariantDto variantDto1 = variantService.updateVariant(baseId, variantDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -112,7 +117,7 @@ public class ProductController extends BaseController {
     }
 
     @PutMapping("/base-products/{id}/attributes")
-    public ResponseEntity<ResponseObject> updateNameAttribute(@PathVariable("id") int baseId, @RequestBody AttributeDto nameAttributeDto){
+    public ResponseEntity<ResponseObject> updateNameAttribute(@PathVariable("id") int baseId, @RequestBody AttributeDto nameAttributeDto) {
         baseProductService.updateNameAttribute(baseId, nameAttributeDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -122,7 +127,7 @@ public class ProductController extends BaseController {
     }
 
     @PostMapping("/base-products/{id}/attributes")
-    public ResponseEntity<ResponseObject> createAttribute(@PathVariable("id") int baseId, @RequestBody AttributeDto attributeDto){
+    public ResponseEntity<ResponseObject> createAttribute(@PathVariable("id") int baseId, @RequestBody AttributeDto attributeDto) {
         baseProductService.createAttribute(baseId, attributeDto);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
@@ -160,6 +165,7 @@ public class ProductController extends BaseController {
                 .data(null)
                 .build());
     }
+
     @GetMapping("base-products/search")
     public ResponseEntity<ResponseObject> getAllBaseProductsByKeyword(@RequestParam(name = "keyword") String keyword) {
         List<BaseProductDto> baseProductDtos = baseProductService.getAllBaseProductsByKeyword(keyword);

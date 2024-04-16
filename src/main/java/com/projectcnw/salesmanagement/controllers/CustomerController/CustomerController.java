@@ -136,7 +136,12 @@ public class CustomerController extends BaseController {
             newCustomer = customerServices.createCustomer(customer);
         } catch (Exception e) {
             // Xử lý lỗi khi tạo người dùng
-            System.out.println(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseObject.builder()
+                            .responseCode(500)
+                            .message("Error creating customer")
+                            .data(null)
+                            .build());
         }
 
 //        try {

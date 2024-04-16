@@ -1,26 +1,13 @@
-package com.example.expense_management.repositories.spec;
+package com.projectcnw.salesmanagement.repositories.spec;
 
-import com.example.expense_management.models.ExpenseCategories;
-import com.example.expense_management.models.UserExpenses;
-import jakarta.persistence.criteria.Join;
+import com.projectcnw.salesmanagement.models.Products.Category;
 import org.springframework.data.jpa.domain.Specification;
 
-public class UserExpenseSpecification {
-    public static Specification<UserExpenses> hasNameLike(String name) {
+public class CategorySpecification {
+    public static Specification<Category> hasNameLike(String name) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(root.<String>get("expenseName"), "%" + name + "%");
+                criteriaBuilder.like(root.<String>get("title"), "%" + name + "%");
     }
 
-    public static Specification<UserExpenses> hasNoteLike(String note) {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(root.<String>get("note"), "%" + note + "%");
-    }
-
-    public static Specification<UserExpenses> hasCategoryNameLike(String categoryName) {
-        return (root, query, criteriaBuilder) -> {
-            Join<ExpenseCategories, UserExpenses> authorsBook = root.join("expenseCategory");
-            return criteriaBuilder.like(authorsBook.get("categoryName"), "%" + categoryName + "%");
-        };
-    }
 
 }

@@ -1,6 +1,7 @@
 package com.projectcnw.salesmanagement.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
@@ -18,20 +19,27 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Promotion extends BaseEntity{
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "policy_apply")
+    @JsonProperty("policyApply")
+    private PromotionPolicyApplyType policyApply;
+
     private String title;
     private Integer value;
-    private Date startDate;
-    private Date endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "value_type")
+    @JsonProperty("valueType")
     private PromotionEnumType valueType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "promotion_type")
-    private PromotionPolicyApplyType policyApply;
+    private Date startDate;
+    private Date endDate;
 
-    private String description;
+
+    @Column(name = "active", columnDefinition = "boolean default true")
+    private boolean active;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

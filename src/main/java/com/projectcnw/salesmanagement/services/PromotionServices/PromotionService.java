@@ -38,6 +38,7 @@ public class PromotionService {
 
         if (promotion.getPolicyApply() == PromotionPolicyApplyType.CATEGORY && promotion.getCategoryIds() != null) {
             categories = categoryRepository.getListCategoryByIds(promotion.getCategoryIds());
+            products = baseProductRepository.getListBaseProductByCategoryIds(promotion.getCategoryIds());
         }
         if (promotion.getPolicyApply() == PromotionPolicyApplyType.PRODUCT && promotion.getProductIds() != null) {
             products = baseProductRepository.getListBaseProductByIds(promotion.getProductIds());
@@ -94,6 +95,7 @@ public class PromotionService {
         promotionUpdate.setValue(promotion.getValue());
         promotionUpdate.setStartDate(promotion.getStartDate());
         promotionUpdate.setEndDate(promotion.getEndDate());
+        promotionUpdate.setActive(promotion.isActive());
         promotionUpdate.setValueType(promotion.getValueType());
         promotionUpdate.setPolicyApply(promotion.getPolicyApply());
         promotionUpdate.setDescription(promotion.getDescription());

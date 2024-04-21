@@ -43,6 +43,7 @@ public class CustomerSecurityConfig {
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/customer/auth/**").permitAll()
+                        .requestMatchers("/api/variants/**").permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterAfter(customerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

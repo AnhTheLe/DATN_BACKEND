@@ -27,19 +27,41 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
             "       bp.updated_at AS updatedAt\n" +
             "FROM base_product bp\n" +
             "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
-            "WHERE bp.is_deleted = false\n"+
-            "GROUP BY bp.id, bp.name, bp.is_deleted\n"+
-            "ORDER BY bp.created_at DESC\n"+
+            "WHERE bp.is_deleted = false\n" +
+            "GROUP BY bp.id, bp.name, bp.is_deleted\n" +
+            "ORDER BY bp.created_at DESC\n" +
             "LIMIT :size OFFSET :offset", nativeQuery = true)
-    List<IBaseProductDto> findAllBaseProduct(@Param("size") int size,@Param("offset") int offset);
+    List<IBaseProductDto> findAllBaseProduct(@Param("size") int size, @Param("offset") int offset);
 
-    @Query(value = "SELECT COUNT(*) FROM base_product bp WHERE bp.is_deleted = false", nativeQuery = true)
-    long count();
+    // getListBaseProductByIds
+    @Query(value = "SELECT bp.*" +
+            "FROM base_product bp\n" +
+            "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
+            "WHERE bp.id IN :ids AND bp.is_deleted = false\n" +
+            "GROUP BY bp.id, bp.name, bp.is_deleted\n" +
+            "ORDER BY bp.created_at DESC", nativeQuery = true)
+    List<BaseProduct> getListBaseProductByIds(@Param("ids") List<Integer> ids);
+
+    // getListBaseProductByCategoryIds
+    @Query(value = "SELECT bp.*" +
+            "FROM base_product bp\n" +
+            "LEFT JOIN product_category pc ON bp.id = pc.base_id\n" +
+            "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
+            "WHERE pc.category_id IN :ids AND bp.is_deleted = false\n" +
+            "GROUP BY bp.id, bp.name, bp.is_deleted\n" +
+            "ORDER BY bp.created_at DESC", nativeQuery = true)
+    List<BaseProduct> getListBaseProductByCategoryIds(@Param("ids") List<Integer> ids);
+
+    // count base-product by categoryId
+    //countProductByCategory
+    @Query(value = "SELECT COUNT(*) FROM product_category bc LEFT JOIN base_product bp ON bp.is_deleted = false WHERE bc.category_id = :categoryId", nativeQuery = true)
+    int countProductByCategory(@Param("categoryId") int categoryId);
 
     @Transactional
     @Modifying
     @Query(value = "UPDATE base_product SET name =:name, label=:label WHERE id =:baseId", nativeQuery = true)
     void updateBaseProduct(@Param("baseId") int baseId, @Param("name") String name, @Param("label") String label);
+
     @Query(value = "SELECT bp.id AS id,\n" +
             "       bp.name AS name,\n" +
             "       bp.label AS label,\n" +
@@ -54,6 +76,7 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
             "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
             "GROUP BY bp.id, bp.name, bp.is_deleted HAVING bp.id =:baseId AND bp.is_deleted = false\n", nativeQuery = true)
     IBaseProductDto findBaseProductById(@Param("baseId") int baseId);
+
     @Query(value = "SELECT bp.id AS id,\n" +
             "       bp.name AS name,\n" +
             "       bp.label AS label,\n" +
@@ -68,34 +91,39 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
             "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
             "GROUP BY bp.id, bp.name, bp.is_deleted HAVING (bp.name LIKE CONCAT('%', :keyword, '%') OR bp.label LIKE CONCAT('%', :keyword, '%')) AND bp.is_deleted = false\n", nativeQuery = true)
     List<IBaseProductDto> findAllBaseProductsByKeyword(@Param("keyword") String keyword);
+
     @Query(value = "SELECT v.id as id, v.barcode as barcode, v.image as image, v.import_price as importPrice, v.name as name, v.quantity as quantity, v.retail_price as retailPrice, v.sku as sku, v.wholesale_price as wholeSalePrice, v.created_at as createdAt, v.updated_at as updatedAt, v.base_id as baseId, v.value1 as value1, v.value2 as value2, v.value3 as value3\n" +
             " FROM variant v WHERE v.base_id = :baseId AND v.is_deleted = false"
             , nativeQuery = true)
     List<IVariantDto> findAllVariantByBaseProductId(@Param("baseId") int baseId);
 
     BaseProduct save(BaseProductDto baseProductDto);
+
     BaseProduct findById(int baseId);
 
     @Transactional
     @Modifying
     @Query(value = "UPDATE base_product SET attribute1 = :name WHERE id = :baseId", nativeQuery = true)
     void updateNameAttribute1(@Param("baseId") int baseId, @Param("name") String name);
+
     @Transactional
     @Modifying
     @Query(value = "UPDATE base_product SET attribute2 = :name WHERE id = :baseId", nativeQuery = true)
     void updateNameAttribute2(@Param("baseId") int baseId, @Param("name") String name);
+
     @Transactional
     @Modifying
     @Query(value = "UPDATE base_product SET attribute3 = :name WHERE id = :baseId", nativeQuery = true)
     void updateNameAttribute3(@Param("baseId") int baseId, @Param("name") String name);
+
     @Transactional
     @Modifying
-    @Query(value ="UPDATE variant SET value2 =:value WHERE base_id =:baseId", nativeQuery = true)
+    @Query(value = "UPDATE variant SET value2 =:value WHERE base_id =:baseId", nativeQuery = true)
     void createValue2AttributeForVariant(@Param("baseId") int baseId, @Param("value") String value);
 
     @Transactional
     @Modifying
-    @Query(value ="UPDATE variant SET value3 =:value WHERE base_id =:baseId", nativeQuery = true)
+    @Query(value = "UPDATE variant SET value3 =:value WHERE base_id =:baseId", nativeQuery = true)
     void createValue3AttributeForVariant(@Param("baseId") int baseId, @Param("value") String value);
 
 
@@ -103,6 +131,7 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
     @Modifying
     @Query(value = "UPDATE base_product SET is_deleted = true WHERE id =:baseId", nativeQuery = true)
     void deleteBaseProductById(@Param("baseId") int baseId);
+
     @Transactional
     @Modifying
     @Query(value = "UPDATE variant SET is_deleted = true WHERE base_id =:baseId", nativeQuery = true)

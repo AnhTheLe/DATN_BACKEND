@@ -4,6 +4,7 @@ import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
+import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class VariantController extends BaseController {
                                                               @RequestParam(name = "size", defaultValue = "10") int size) {
         long totalItems = variantService.countVariant();
         int totalPages = (int) Math.ceil((double) totalItems / size);
-        List<VariantDto> variantDtos = variantService.getAllVariants(page, size);
+        List<VariantSaleResponse> variantDtos = variantService.getAllVariants(page, size);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)
                 .perPage(size)

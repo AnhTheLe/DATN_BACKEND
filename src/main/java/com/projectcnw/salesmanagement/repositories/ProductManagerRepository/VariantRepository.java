@@ -3,7 +3,10 @@ package com.projectcnw.salesmanagement.repositories.ProductManagerRepository;
 
 import com.projectcnw.salesmanagement.dto.productDtos.ILastIdVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.IVariantDto;
+import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
+import com.projectcnw.salesmanagement.dto.promotion.PromotionResponse;
 import com.projectcnw.salesmanagement.models.Products.Variant;
+import com.projectcnw.salesmanagement.models.Promotion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,13 +14,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 public interface VariantRepository extends JpaRepository<Variant, Integer> {
     //Lấy ra danh sách tất cả các Variant
-    @Query(value = "SELECT v.id as id, v.barcode as barcode, v.image as image, v.import_price as importPrice, v.name as name, v.quantity as quantity, v.retail_price as retailPrice, v.sku as sku, v.wholesale_price as wholeSalePrice, v.created_at as createdAt, v.updated_at as updatedAt, v.base_id as baseId, v.value1 as value1, v.value2 as value2, v.value3 as value3\n" +
-            "FROM variant v WHERE v.is_deleted = false ORDER BY v.created_at DESC LIMIT :size OFFSET :offset"
+    @Query(value = "SELECT v.* from variant v \n" +
+            "WHERE v.is_deleted = false ORDER BY v.created_at DESC LIMIT :size OFFSET :offset"
             , nativeQuery = true)
-    List<IVariantDto> findAllVariant(@Param("size") int size,@Param("offset") int offset);
+    List<Variant> findAllVariant(@Param("size") int size, @Param("offset") int offset);
+
+    // get all promotion by variantId
 
     @Query(value = "SELECT DISTINCT v.id as id, v.barcode as barcode, v.image as image, v.import_price as importPrice, v.name as name, v.quantity as quantity, v.retail_price as retailPrice, v.sku as sku, v.wholesale_price as wholeSalePrice, v.created_at as createdAt, v.updated_at as updatedAt, v.base_id as baseId, v.value1 as value1, v.value2 as value2, v.value3 as value3\n" +
             "FROM variant v WHERE v.is_deleted = false and (v.sku LIKE CONCAT('%', :keyword, '%') OR v.name LIKE CONCAT('%', :keyword, '%') OR v.barcode LIKE CONCAT('%', :keyword, '%')) ORDER BY v.created_at DESC"

@@ -4,41 +4,112 @@ import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Variant;
+import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
+import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.NonJPAProductRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.VariantRepository;
+import com.projectcnw.salesmanagement.services.CategoryServices.CategoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BaseProductService {
     private final BaseProductRepository baseProductRepository;
 
     private final VariantRepository variantRepository;
 
+    private final CategoryService categoryService;
+
+    private final CategoryRepository categoryRepository;
+
+    private final NonJPAProductRepository nonJPAProductRepository;
+
     private final VariantService variantService;
     private ModelMapper modelMapper = new ModelMapper();
 
 
-    public long countBaseProduct() {
-        return baseProductRepository.count();
-    }
-    public List<BaseProductDto> getAll(int page, int size) {
-        int offset = (page -1)*size;
-        List<IBaseProductDto> iBaseProductDtos = baseProductRepository.findAllBaseProduct(size, offset);
-        List<BaseProductDto> baseProducts = Arrays.asList(modelMapper.map(iBaseProductDtos, BaseProductDto[].class));
+
+    public List<BaseProductDto> getAll(int page, int size, String query, String categoryIds, String start_date, String end_date) {
+        List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        if (end_date != null && !end_date.isEmpty()) {
+            try {
+                endDate = LocalDate.parse(end_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX);
+                ;
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        List<BaseProduct> iBaseProductDtos = nonJPAProductRepository.getAllProduct(page, size, query, categoryIdList, startDate, endDate);
+
+        List<BaseProductDto> baseProducts = new ArrayList<>();
+        for (BaseProduct baseProduct : iBaseProductDtos) {
+            BaseProductDto baseProductDto = modelMapper.map(baseProduct, BaseProductDto.class);
+            baseProductDto.setVariantNumber(baseProduct.getVariantList().size());
+            baseProductDto.setQuantity(baseProduct.getVariantList().stream().mapToInt(Variant::getQuantity).sum());
+            baseProductDto.setVariants(null);
+            baseProducts.add(baseProductDto);
+        }
+
         return baseProducts;
 //        return new PageImpl<>(baseProducts, pageable, baseProducts.size());
     }
+
+    public int countProducts (int page, int size, String query, String categoryIds, String start_date, String end_date) {
+        List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        if (end_date != null && !end_date.isEmpty()) {
+            try {
+                endDate = LocalDate.parse(end_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX);
+                ;
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        return nonJPAProductRepository.countProducts(page, size, query, categoryIdList, startDate, endDate);
+    }
+
     public List<VariantDto> getAllVariantOfBaseProductByBaseId(int baseId) {
         List<IVariantDto> iVariantDtos = baseProductRepository.findAllVariantByBaseProductId(baseId);
         return Arrays.asList(modelMapper.map(iVariantDtos, VariantDto[].class));
     }
+
     @Transactional
     public BaseProductDto getBaseProductById(int baseId) {
         IBaseProductDto iBaseProductDto = baseProductRepository.findBaseProductById(baseId);
@@ -56,15 +127,16 @@ public class BaseProductService {
                 && baseProductDto.getAttribute2() != null
                 && !baseProductDto.getAttribute2().equals("")
                 && baseProductDto.getAttribute1().equals(baseProductDto.getAttribute2())
-        ) throw new ProductException("Thuộc tính "+baseProduct.getAttribute1()+ " đã tồn tại");
+        ) throw new ProductException("Thuộc tính " + baseProduct.getAttribute1() + " đã tồn tại");
         if (baseProductDto.getAttribute2() != null
                 && baseProductDto.getAttribute3() != null
                 && !baseProductDto.getAttribute2().equals("")
                 && baseProductDto.getAttribute2().equals(baseProductDto.getAttribute3())
-        ) throw new ProductException("Thuộc tính "+baseProduct.getAttribute2()+ " đã tồn tại");
-
+        ) throw new ProductException("Thuộc tính " + baseProduct.getAttribute2() + " đã tồn tại");
+        if (baseProductDto.getCategoryIds().size() > 0) {
+            baseProduct.setCategories(categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
+        }
         BaseProduct baseProduct1 = baseProductRepository.save(baseProduct);
-
 
 //      kiểm tra xem có attribute2, attribute3 không
         boolean isSetAttribute2 = false;
@@ -79,23 +151,25 @@ public class BaseProductService {
         if (lastIdVariant != null) lastId = lastIdVariant.getLastId();
         for (Variant variant : variantList) {
             variant.setBaseProduct(baseProduct1);
-            if (variant.getSku() == null||variant.getSku().equals("")) {
-                int tmpSku = baseProduct1.getId()+100000+lastId+i;
-                String skuString = "SKU"+baseProduct1.getId()+tmpSku;
+            if (variant.getSku() == null || variant.getSku().equals("")) {
+                int tmpSku = baseProduct1.getId() + 100000 + lastId + i;
+                String skuString = "SKU" + baseProduct1.getId() + tmpSku;
                 variant.setSku(skuString);
-            } else if(variant.getSku().startsWith("SKU")) {
+            } else if (variant.getSku().startsWith("SKU")) {
                 throw new ProductException("Mã SKU không được bắt đầu bằng \"SKU\"");
             }
-            if (variant.getBarcode() == null||variant.getBarcode().equals("")) {
+            if (variant.getBarcode() == null || variant.getBarcode().equals("")) {
                 variant.setBarcode(variant.getSku());
             }
             i++;
             if (variant.getValue1() == null || variant.getValue1().isBlank())
                 throw new ProductException("Thuộc tính không được để trống");
             if (isSetAttribute2)
-                if (variant.getValue2() == null ||variant.getValue2().isBlank()) throw new ProductException("Thuộc tính không được để trống");
+                if (variant.getValue2() == null || variant.getValue2().isBlank())
+                    throw new ProductException("Thuộc tính không được để trống");
             if (isSetAttribute3)
-                if (variant.getValue3() == null ||variant.getValue3().isBlank()) throw new ProductException("Thuộc tính không được để trống");
+                if (variant.getValue3() == null || variant.getValue3().isBlank())
+                    throw new ProductException("Thuộc tính không được để trống");
         }
         variantRepository.saveAll(variantList);
 
@@ -106,9 +180,12 @@ public class BaseProductService {
     public BaseProductDto updateBaseProduct(int baseId, BaseProductDto baseProductDto) {
         BaseProduct baseProduct = baseProductRepository.findById(baseId);
         if (baseProduct == null) throw new ProductException("Không tìm thấy sản phẩm");
-        if (    baseProductDto.getName() == null || baseProductDto.getName().isBlank())
+        if (baseProductDto.getName() == null || baseProductDto.getName().isBlank())
             throw new ProductException("Tên sản phẩm không được trống");
 
+        if (baseProductDto.getCategoryIds().size() > 0) {
+            baseProduct.setCategories(categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
+        }
         baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel());
         BaseProduct baseProduct1 = baseProductRepository.findById(baseId);
 
@@ -116,34 +193,38 @@ public class BaseProductService {
     }
 
     @Transactional
-    public void updateNameAttribute(int baseId, AttributeDto nameAttributeDto){
+    public void updateNameAttribute(int baseId, AttributeDto nameAttributeDto) {
         nameAttributeDto.setName(nameAttributeDto.getName().trim());
         BaseProduct baseProduct = baseProductRepository.findById(baseId);
         if (baseProduct == null) throw new ProductException("Không tìm thấy sản phẩm");
-        if (    nameAttributeDto.getKeyAttribute() == null
+        if (nameAttributeDto.getKeyAttribute() == null
                 && !nameAttributeDto.getKeyAttribute().equals("attribute1")
                 && !nameAttributeDto.getKeyAttribute().equals("attribute2")
                 && !nameAttributeDto.getKeyAttribute().equals("attribute3"))
             throw new ProductException("keyAttribute is not null or must be in the array");
 
-        if (nameAttributeDto.getName() == null || nameAttributeDto.getName().isBlank()) throw new ProductException("name is not null");
+        if (nameAttributeDto.getName() == null || nameAttributeDto.getName().isBlank())
+            throw new ProductException("name is not null");
 
         if (nameAttributeDto.getKeyAttribute().equals("attribute1")) {
-            if (baseProduct.getAttribute1() == null || baseProduct.getAttribute1().equals("")) throw new ProductException("attribute1 is unset");
+            if (baseProduct.getAttribute1() == null || baseProduct.getAttribute1().equals(""))
+                throw new ProductException("attribute1 is unset");
             if (nameAttributeDto.getName().equals(baseProduct.getAttribute1()))
-                throw new ProductException("Thuộc tính '"+nameAttributeDto.getName()+"' đã tồn tại");
+                throw new ProductException("Thuộc tính '" + nameAttributeDto.getName() + "' đã tồn tại");
             else baseProductRepository.updateNameAttribute1(baseId, nameAttributeDto.getName());
         }
         if (nameAttributeDto.getKeyAttribute().equals("attribute2")) {
-            if (baseProduct.getAttribute2() == null || baseProduct.getAttribute2().equals("")) throw new ProductException("attribute2 is unset");
+            if (baseProduct.getAttribute2() == null || baseProduct.getAttribute2().equals(""))
+                throw new ProductException("attribute2 is unset");
             if (nameAttributeDto.getName().equals(baseProduct.getAttribute2()))
-                throw new ProductException("Thuộc tính '"+nameAttributeDto.getName()+"' đã tồn tại");
+                throw new ProductException("Thuộc tính '" + nameAttributeDto.getName() + "' đã tồn tại");
             else baseProductRepository.updateNameAttribute2(baseId, nameAttributeDto.getName());
         }
         if (nameAttributeDto.getKeyAttribute().equals("attribute3")) {
-            if (baseProduct.getAttribute3() == null || baseProduct.getAttribute3().equals("")) throw new ProductException("attribute3 is unset");
+            if (baseProduct.getAttribute3() == null || baseProduct.getAttribute3().equals(""))
+                throw new ProductException("attribute3 is unset");
             if (nameAttributeDto.getName().equals(baseProduct.getAttribute3()))
-                throw new ProductException("Thuộc tính '"+nameAttributeDto.getName()+"' đã tồn tại");
+                throw new ProductException("Thuộc tính '" + nameAttributeDto.getName() + "' đã tồn tại");
             else baseProductRepository.updateNameAttribute3(baseId, nameAttributeDto.getName());
         }
     }
@@ -155,10 +236,12 @@ public class BaseProductService {
         BaseProduct baseProduct = baseProductRepository.findById(baseId);
         if (baseProduct == null) throw new ProductException("Không tìm thấy sản phẩm");
 
-        if (attributeDto.getName() == null || attributeDto.getName().isBlank()) throw new ProductException("Tên thuộc tính không được để trống");
-        if (attributeDto.getValue() == null || attributeDto.getValue().isBlank()) throw new ProductException("Giá trị thuộc tính không được trống");
+        if (attributeDto.getName() == null || attributeDto.getName().isBlank())
+            throw new ProductException("Tên thuộc tính không được để trống");
+        if (attributeDto.getValue() == null || attributeDto.getValue().isBlank())
+            throw new ProductException("Giá trị thuộc tính không được trống");
 
-        if (    baseProduct.getAttribute1() != null
+        if (baseProduct.getAttribute1() != null
                 && !baseProduct.getAttribute1().equals("")
                 && baseProduct.getAttribute2() != null
                 && !baseProduct.getAttribute2().equals("")
@@ -169,12 +252,12 @@ public class BaseProductService {
 
         if (baseProduct.getAttribute2() == null || baseProduct.getAttribute2().equals("")) {
             if (attributeDto.getName().equals(baseProduct.getAttribute1()))
-                throw new ProductException("Thuộc tính '"+attributeDto.getName()+"' đã tồn tại");
+                throw new ProductException("Thuộc tính '" + attributeDto.getName() + "' đã tồn tại");
             baseProductRepository.updateNameAttribute2(baseId, attributeDto.getName());
             baseProductRepository.createValue2AttributeForVariant(baseId, attributeDto.getValue());
         } else if (baseProduct.getAttribute3() == null || baseProduct.getAttribute3().equals("")) {
-            if (attributeDto.getName().equals(baseProduct.getAttribute1())||attributeDto.getName().equals(baseProduct.getAttribute2()))
-                throw new ProductException("Thuộc tính '"+attributeDto.getName()+"' đã tồn tại");
+            if (attributeDto.getName().equals(baseProduct.getAttribute1()) || attributeDto.getName().equals(baseProduct.getAttribute2()))
+                throw new ProductException("Thuộc tính '" + attributeDto.getName() + "' đã tồn tại");
             baseProductRepository.updateNameAttribute3(baseId, attributeDto.getName());
             baseProductRepository.createValue3AttributeForVariant(baseId, attributeDto.getValue());
         }
@@ -209,7 +292,7 @@ public class BaseProductService {
             baseProductRepository.updateNameAttribute2(baseId, baseProduct.getAttribute3());
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant:baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariantList()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue1(variant.getValue2());
                 variant.setValue2(variant.getValue3());
@@ -220,7 +303,7 @@ public class BaseProductService {
             baseProductRepository.updateNameAttribute2(baseId, baseProduct.getAttribute3());
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant:baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariantList()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue2(variant.getValue3());
                 variant.setValue3("");
@@ -229,7 +312,7 @@ public class BaseProductService {
         } else if (keyAttribute.equals("attribute3")) {
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant:baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariantList()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue3("");
                 variantRepository.save(variant);

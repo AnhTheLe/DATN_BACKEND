@@ -1,10 +1,7 @@
 package com.projectcnw.salesmanagement.models.Products;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.projectcnw.salesmanagement.models.BaseEntity;
-import com.projectcnw.salesmanagement.models.CartItem;
-import com.projectcnw.salesmanagement.models.Promotion;
-import com.projectcnw.salesmanagement.models.Shop;
+import com.projectcnw.salesmanagement.models.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -15,6 +12,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(name = "base_product")
 public class BaseProduct extends BaseEntity {
 
     @NotBlank(message = "Name is mandatory")
@@ -41,9 +39,6 @@ public class BaseProduct extends BaseEntity {
     @JsonBackReference
     private List<Category> categories;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private CartItem cartItem;
 
     @ManyToMany(mappedBy = "products")
     @JsonBackReference

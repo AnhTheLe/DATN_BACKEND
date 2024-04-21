@@ -13,14 +13,11 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = "cart")
-public class Cart extends BaseEntity {
+public class ShoppingCart extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
-
-    @Column(name = "session_id")
-    private String sessionId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

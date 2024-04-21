@@ -6,6 +6,7 @@ import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.AttributeDto;
 import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
+import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.impl.NonJpaProductRepository;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.BaseProductService;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController extends BaseController {
     private final BaseProductService baseProductService;
+    private final NonJpaProductRepository nonJpaProductRepository;
     private final VariantService variantService;
 
     //
@@ -30,12 +32,12 @@ public class ProductController extends BaseController {
                                                                  @RequestParam(name = "size", defaultValue = "10") int size,
                                                                  @RequestParam(name = "query", defaultValue = "") String query,
                                                                  @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
-                                                                 @RequestParam(name = "created_at", defaultValue = "") String created_at,
-                                                                 @RequestParam(name = "updated_at", defaultValue = "") String updated_at
+                                                                 @RequestParam(name = "startDate", defaultValue = "") String startDate,
+                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate
     ) {
-        long totalItems = baseProductService.countBaseProduct();
+        List<BaseProductDto> products = baseProductService.getAll(page, size, query, categoryIds, startDate, endDate);
+        long totalItems = baseProductService.countProducts(page, size, query, categoryIds, startDate, endDate);
         int totalPages = (int) Math.ceil((double) totalItems / size);
-        List<BaseProductDto> products = baseProductService.getAll(page, size);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)
                 .perPage(size)

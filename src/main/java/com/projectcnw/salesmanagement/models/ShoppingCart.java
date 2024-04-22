@@ -1,21 +1,24 @@
 package com.projectcnw.salesmanagement.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.CartStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 import java.util.List;
 
+@Builder
 @Entity
 @Getter
 @Setter
-@Table(name = "cart")
+@Table(name = "shopping_cart", uniqueConstraints =@UniqueConstraint(columnNames = {"customer_id", "variant_id"}))
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShoppingCart extends BaseEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
@@ -23,27 +26,12 @@ public class ShoppingCart extends BaseEntity {
     @Column(name = "status")
     private CartStatus status;
 
-    @Column(name = "line1")
-    private String line1;
-
-    @Column(name = "line2")
-    private String line2;
-
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "province")
-    private String province;
-
-    @Column(name = "country")
-    private String country;
-
-    @Column(name = "content")
-    private String content;
-
-    @OneToMany(mappedBy = "cart")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "variant_id")
     @JsonIgnore
-    private List<CartItem> cartItems;
+    private Variant variant;
 
-    // Getters and setters
+    @Column(name = "quantity")
+    private int quantity;
+
 }

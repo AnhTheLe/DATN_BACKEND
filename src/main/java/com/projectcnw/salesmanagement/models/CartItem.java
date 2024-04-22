@@ -16,13 +16,14 @@ import java.util.List;
 public class CartItem extends BaseEntity {
 
 
-    @OneToMany(mappedBy = "cartItem")
+    @ManyToOne
+    @JoinColumn(name = "product_id")
     @JsonIgnore
-    private List<BaseProduct> products;
+    private BaseProduct products;
 
     @ManyToOne
     @JoinColumn(name = "cart_id")
-    private Cart cart;
+    private ShoppingCart cart;
 
     @Column(name = "sku")
     private String sku;

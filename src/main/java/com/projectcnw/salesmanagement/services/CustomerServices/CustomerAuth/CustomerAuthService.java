@@ -155,7 +155,7 @@ public class CustomerAuthService {
     }
 
     private void revokeAllUserTokens(Customer user) {
-        var validUserTokens = tokenRepository.findAllValidTokenByUser(Long.valueOf(user.getId()));
+        var validUserTokens = tokenRepository.findAllValidTokenByCustomer(Long.valueOf(user.getId()));
         if (validUserTokens.isEmpty())
             return;
         validUserTokens.forEach(token -> {

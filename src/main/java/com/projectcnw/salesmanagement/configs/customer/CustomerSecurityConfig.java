@@ -1,10 +1,12 @@
 package com.projectcnw.salesmanagement.configs.customer;
 
+import com.projectcnw.salesmanagement.models.enums.RoleType;
 import com.projectcnw.salesmanagement.services.CustomerServices.CustomerAuth.CustomerDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -44,9 +46,10 @@ public class CustomerSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/customer/auth/**").permitAll()
                         .requestMatchers("/api/variants/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "api/user/cart/add").hasAnyAuthority(RoleType.CUSTOMER.name())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterAfter(customerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(customerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

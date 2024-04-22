@@ -22,14 +22,10 @@ public class CustomerDetailService implements UserDetailsService {
 
     @Override
     public Customer loadUserByUsername(String phone) throws NotFoundException {
-        Customer customerEntity = customerRepository.findByEmail(phone)
+
+        return customerRepository.findByEmail(phone)
                 .orElseThrow(
                         () -> new NotFoundException("User " + phone + " not found"));
-
-        return Customer.builder()
-                .phone(customerEntity.getPhone())
-                .password(customerEntity.getPassword())
-                .build();
     }
 
     private Collection<GrantedAuthority> mapRolesToAuthorities(List<Role> roles) {

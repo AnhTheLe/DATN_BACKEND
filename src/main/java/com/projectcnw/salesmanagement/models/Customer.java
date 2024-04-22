@@ -1,11 +1,13 @@
 package com.projectcnw.salesmanagement.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.projectcnw.salesmanagement.models.Auth.Role;
 import com.projectcnw.salesmanagement.models.enums.Gender;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -47,9 +49,14 @@ public class Customer extends BaseEntity implements UserDetails {
     @JsonIgnore
     private List<Feedback> feedbackList;
 
+    @ManyToOne()
+    @Enumerated(EnumType.STRING)
+    @JoinColumn(name = "role_id", columnDefinition = "integer default 5")
+    private Role role;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return List.of(new SimpleGrantedAuthority(role.getName().name()));
     }
 
     @Override
@@ -59,7 +66,7 @@ public class Customer extends BaseEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name;
+        return email;
     }
 
     @Override

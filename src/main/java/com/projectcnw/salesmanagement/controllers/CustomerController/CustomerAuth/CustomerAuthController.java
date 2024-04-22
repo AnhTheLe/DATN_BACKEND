@@ -9,20 +9,18 @@ import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerLoginDto
 import com.projectcnw.salesmanagement.services.CustomerServices.CustomerAuth.CustomerAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/customer/auth")
+@RequestMapping("/api/customer")
 @RequiredArgsConstructor
 public class CustomerAuthController {
     private final CustomerAuthService customerAuthService;
 
-    @PostMapping("login")
+    @PostMapping("/auth/login")
     public ResponseEntity<ResponseObject> login(
             @RequestBody @Valid CustomerLoginDto authDto
     ) {
@@ -36,11 +34,24 @@ public class CustomerAuthController {
                 .build());
     }
 
-    @PostMapping("register")
+    @PostMapping("/auth/register")
     public ResponseEntity<ResponseObject> register(
             @RequestBody @Valid CustomerAuthDto authDto
     ) {
         return customerAuthService.register(authDto);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ResponseObject> getCustomerInfo(@RequestHeader HttpHeaders headers) {
+        String authHeader = headers.getFirst("Authorization");
+        if(authHeader == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Authorization header is required")
+                    .build());
+        }
+        String accessToken = authHeader.substring(7);
+        return customerAuthService.getCustomerInfo(accessToken);
     }
 
 }

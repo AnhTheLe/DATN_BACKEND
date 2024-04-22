@@ -47,6 +47,7 @@ public class CustomerSecurityConfig {
                         .requestMatchers("/api/customer/auth/**").permitAll()
                         .requestMatchers("/api/variants/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "api/user/cart/add").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/customer/me").hasAnyAuthority(RoleType.CUSTOMER.name())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(customerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

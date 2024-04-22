@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,6 +48,8 @@ public class CustomerAuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomerAuthenticationManager customerAuthenticationManager;
 
+    private final CustomerDetailService userDetailsService;
+
     public AuthResponse authenticate(CustomerLoginDto authDto) {
         if(authDto.getEmail() == null || authDto.getPassword() == null) {
             throw new BadRequestException("Email or password is null");
@@ -69,6 +72,31 @@ public class CustomerAuthService {
                 .accessToken(token)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    public ResponseEntity<ResponseObject> getCustomerInfo(String accessToken) {
+        String email = jwtService.extractUsername(accessToken);
+        Optional<Customer> customer =  userRepository.findByEmail(email);
+        if(customer.isEmpty()){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(404)
+                    .message("profile not found")
+                    .data(null)
+                    .build());
+        }
+        var validUserTokens = tokenRepository.findAllValidTokenByCustomer(Long.valueOf(customer.get().getId()));
+        if (validUserTokens.isEmpty()) {
+            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Token is invalid")
+                    .data(null)
+                    .build());
+        }
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(customer.get())
+                .build());
     }
 
 

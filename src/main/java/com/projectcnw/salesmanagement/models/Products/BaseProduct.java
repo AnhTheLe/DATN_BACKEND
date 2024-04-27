@@ -30,7 +30,7 @@ public class BaseProduct extends BaseEntity {
     @JoinColumn(name = "shop_id")
     private Shop shop;
 
-    @OneToMany(mappedBy = "baseProduct")
+    @OneToMany(mappedBy = "baseProduct",fetch = FetchType.EAGER)
     private List<Variant> variantList;
     @Column(name = "is_deleted", columnDefinition = "boolean default false")
     private boolean isDeleted;

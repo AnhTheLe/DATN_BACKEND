@@ -2,8 +2,8 @@ package com.projectcnw.salesmanagement.controllers.CustomerController.CustomerAu
 
 
 import com.projectcnw.salesmanagement.dto.ResponseObject;
-import com.projectcnw.salesmanagement.dto.auth.AuthDto;
 import com.projectcnw.salesmanagement.dto.auth.AuthResponse;
+import com.projectcnw.salesmanagement.dto.auth.VerifyTokenRequest;
 import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerAuthDto;
 import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerLoginDto;
 import com.projectcnw.salesmanagement.services.CustomerServices.CustomerAuth.CustomerAuthService;
@@ -33,6 +33,14 @@ public class CustomerAuthController {
                 .responseCode(HttpStatus.OK.value())
                 .build());
     }
+
+    @PostMapping("/auth/verify-token")
+    public ResponseEntity<ResponseObject> verifyToken(
+            @RequestBody @Valid VerifyTokenRequest request
+    ) {
+        return customerAuthService.verifyToken(request);
+    }
+
 
     @PostMapping("/auth/register")
     public ResponseEntity<ResponseObject> register(

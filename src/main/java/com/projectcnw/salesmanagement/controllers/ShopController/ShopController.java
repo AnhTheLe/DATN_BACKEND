@@ -5,7 +5,6 @@ import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.models.Shop;
 import com.projectcnw.salesmanagement.services.ShopService.ShopService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -3,7 +3,6 @@ package com.projectcnw.salesmanagement.controllers;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.services.ImageUploader;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -4,7 +4,6 @@ package com.projectcnw.salesmanagement.services.ShopService;
 import com.projectcnw.salesmanagement.models.Shop;
 import com.projectcnw.salesmanagement.repositories.ShopRepository.ShopRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 

@@ -2,7 +2,6 @@ package com.projectcnw.salesmanagement.repositories;
 
 
 import com.projectcnw.salesmanagement.models.Auth.Token;
-import com.projectcnw.salesmanagement.models.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

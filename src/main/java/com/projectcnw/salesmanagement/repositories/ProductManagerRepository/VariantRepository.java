@@ -3,10 +3,7 @@ package com.projectcnw.salesmanagement.repositories.ProductManagerRepository;
 
 import com.projectcnw.salesmanagement.dto.productDtos.ILastIdVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.IVariantDto;
-import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
-import com.projectcnw.salesmanagement.dto.promotion.PromotionResponse;
 import com.projectcnw.salesmanagement.models.Products.Variant;
-import com.projectcnw.salesmanagement.models.Promotion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -33,6 +30,13 @@ public interface VariantRepository extends JpaRepository<Variant, Integer> {
 //    @Modifying
     @Query(value = "SELECT COUNT(*) FROM variant v WHERE v.is_deleted = false", nativeQuery = true)
     long count();
+
+    //getTop10VariantHasPromotion()
+    @Query(value = "SELECT v.*\n" +
+            "FROM variant v INNER JOIN promotion_product pp ON v.base_id = pp.product_id INNER JOIN promotion p ON pp.promotion_id = p.id WHERE v.is_deleted = false AND p.active = true ORDER BY p.created_at DESC LIMIT 10"
+            , nativeQuery = true)
+    List<Variant> getTop10VariantHasPromotion();
+
     Variant findById(int variantId);
 
     @Transactional

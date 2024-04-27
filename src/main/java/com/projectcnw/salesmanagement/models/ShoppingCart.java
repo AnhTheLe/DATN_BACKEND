@@ -5,10 +5,6 @@ import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.CartStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.Date;
-import java.util.List;
-
 @Builder
 @Entity
 @Getter

@@ -2,7 +2,7 @@ package com.projectcnw.salesmanagement.controllers.WebPageController.VariantCont
 
 
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
-import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
+import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +37,16 @@ public class VariantWebPageController {
                 .perPage(size)
                 .totalItems(totalItems)
                 .totalPages(totalPages)
+                .responseCode(200)
+                .message("Success")
+                .data(products)
+                .build());
+    }
+
+    @GetMapping("/top-discount")
+    public ResponseEntity<ResponseObject> getTop10VariantSale() {
+        List<VariantSaleResponse> products = variantService.getTop10VariantHasPromotion();
+        return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
                 .message("Success")
                 .data(products)

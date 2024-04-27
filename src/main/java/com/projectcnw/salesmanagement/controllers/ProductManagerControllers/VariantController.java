@@ -7,7 +7,6 @@ import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

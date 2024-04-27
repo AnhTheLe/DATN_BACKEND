@@ -1,6 +1,5 @@
 package com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.impl;
 
-import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

@@ -106,10 +106,18 @@ public class VariantService {
             variantSaleResponse.setDiscount((int) discountPrice);
             variantSaleResponse.setDiscountedPrice((int) (variant.getRetailPrice() - discountPrice));
             variantSaleResponse.setId(variant.getId());
+            variantSaleResponse.setImage(variant.getImage());
+
             variantSaleResponses.add(variantSaleResponse);
         }
         return variantSaleResponses;
     }
+
+    public List<VariantSaleResponse> getTop10VariantHasPromotion() {
+        List<Variant> listTopVariantSale = variantRepository.getTop10VariantHasPromotion();
+        return getListVariantResponseFromVariant(listTopVariantSale);
+    }
+
 
     private double calculateDiscountedPrice(Variant variant, Promotion promotion) {
         // Áp dụng promotion để tính toán giá sau khi giảm giá
@@ -143,6 +151,7 @@ public class VariantService {
         }
         return nonJpaVariantRepository.countVariant(query, categoryIdList, startDate, endDate);
     }
+
     public long countVariant() {
         return variantRepository.count();
     }

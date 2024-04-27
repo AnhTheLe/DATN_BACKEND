@@ -1,7 +1,6 @@
 package com.projectcnw.salesmanagement.repositories.CustomerRepositories;
 
 import com.projectcnw.salesmanagement.models.Customer;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

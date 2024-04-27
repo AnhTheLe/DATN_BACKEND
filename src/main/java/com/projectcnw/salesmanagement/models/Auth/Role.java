@@ -1,9 +1,7 @@
 package com.projectcnw.salesmanagement.models.Auth;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.projectcnw.salesmanagement.models.BaseEntity;
-import com.projectcnw.salesmanagement.models.Customer;
 import com.projectcnw.salesmanagement.models.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,6 +1,5 @@
 package com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository;
 
-import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 
 import java.time.LocalDateTime;

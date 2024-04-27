@@ -10,9 +10,7 @@ import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerAuthDto;
 import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerLoginDto;
 import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
-import com.projectcnw.salesmanagement.exceptions.UnAuthorizedException;
 import com.projectcnw.salesmanagement.models.Auth.Token;
-import com.projectcnw.salesmanagement.models.Auth.UserEntity;
 import com.projectcnw.salesmanagement.models.Customer;
 import com.projectcnw.salesmanagement.models.enums.TokenType;
 import com.projectcnw.salesmanagement.repositories.CustomerRepositories.CustomerRepository;
@@ -27,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +75,7 @@ public class CustomerAuthService {
         String email = jwtService.extractUsername(accessToken);
         Optional<Customer> customer =  userRepository.findByEmail(email);
         if(customer.isEmpty()){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(404)
                     .message("profile not found")
                     .data(null)
@@ -159,16 +156,38 @@ public class CustomerAuthService {
         }
     }
 
-    public UserInfoDto verifyToken(VerifyTokenRequest request) {
-        var phone = jwtService.extractUsername(request.getToken());
+    public ResponseEntity<ResponseObject> verifyToken(VerifyTokenRequest request) {
+        var email = jwtService.extractUsername(request.getToken());
 
-        Customer userEntity = userRepository.findByEmail(phone)
-                .orElseThrow(() -> new NotFoundException("profile not found"));
-        if (!jwtService.isTokenValid(request.getToken(), userEntity)) {
-            throw new UnAuthorizedException();
+        Optional<Customer> customer =  userRepository.findByEmail(email);
+        if(customer.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(404)
+                    .message("profile not found")
+                    .data(null)
+                    .build());
         }
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(userEntity, UserInfoDto.class);
+
+        var validUserTokens = tokenRepository.findAllValidTokenByCustomer(Long.valueOf(customer.get().getId()));
+        if (validUserTokens.isEmpty()) {
+            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Token is invalid")
+                    .data(null)
+                    .build());
+        } else if (!jwtService.isTokenValid(request.getToken(), customer.get())) {
+            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Token is invalid")
+                    .data(null)
+                    .build());
+        };
+
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Token is invalid")
+                .data(customer.get())
+                .build());
     }
 
     private void saveCustomerToken(Customer customer, String jwtToken) {

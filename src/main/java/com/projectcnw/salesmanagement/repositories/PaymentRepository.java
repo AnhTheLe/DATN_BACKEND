@@ -1,8 +1,4 @@
 package com.projectcnw.salesmanagement.repositories;
-
-
-import com.projectcnw.salesmanagement.models.Order;
-
 import com.projectcnw.salesmanagement.models.Payment;
 import com.projectcnw.salesmanagement.models.enums.OrderType;
 import org.springframework.data.jpa.repository.JpaRepository;

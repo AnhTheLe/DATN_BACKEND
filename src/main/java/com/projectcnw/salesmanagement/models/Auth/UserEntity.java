@@ -2,9 +2,6 @@ package com.projectcnw.salesmanagement.models.Auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-
-import com.projectcnw.salesmanagement.models.Auth.Role;
 import com.projectcnw.salesmanagement.models.BaseEntity;
 import com.projectcnw.salesmanagement.models.Shop;
 import com.projectcnw.salesmanagement.models.WarehouseBalance;

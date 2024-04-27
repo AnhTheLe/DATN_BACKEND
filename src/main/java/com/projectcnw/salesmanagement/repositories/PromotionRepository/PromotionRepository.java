@@ -1,6 +1,5 @@
 package com.projectcnw.salesmanagement.repositories.PromotionRepository;
 
-import com.projectcnw.salesmanagement.dto.promotion.PromotionResponse;
 import com.projectcnw.salesmanagement.models.Promotion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

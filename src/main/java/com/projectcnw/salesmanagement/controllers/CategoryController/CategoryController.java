@@ -4,8 +4,6 @@ package com.projectcnw.salesmanagement.controllers.CategoryController;
 import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.Category.CategoryRequest;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
-import com.projectcnw.salesmanagement.models.Products.Category;
-import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRepository;
 import com.projectcnw.salesmanagement.services.CategoryServices.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

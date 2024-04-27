@@ -1,6 +1,5 @@
 package com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository;
 
-import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import org.springframework.stereotype.Repository;
 

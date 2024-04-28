@@ -1,13 +1,16 @@
 
 package com.projectcnw.salesmanagement.services.ProductManagerServices;
 
+import com.projectcnw.salesmanagement.dto.orderDtos.TopOrder;
 import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.dto.promotion.PromotionResponse;
+import com.projectcnw.salesmanagement.exceptions.NotFoundException;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.Promotion;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
+import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.impl.NonJpaVariantRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.VariantRepository;
@@ -18,6 +21,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,6 +43,8 @@ public class VariantService {
     private final PromotionRepository promotionRepository;
 
     private final NonJpaVariantRepository nonJpaVariantRepository;
+
+    private final OrderRepository orderRepository;
     private ModelMapper modelMapper = new ModelMapper();
 
     public List<VariantSaleResponse> getAllVariants(int page, int size) {
@@ -72,42 +78,47 @@ public class VariantService {
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
+    private VariantSaleResponse getVariantWithBestPromotion(Variant variant) {
+        VariantSaleResponse variantSaleResponse = new VariantSaleResponse();
+        Promotion bestPromotion = null;
+        List<Promotion> promotions = promotionRepository.getAllPromotionByVariantId(variant.getId());
+        log.info("Promotion: {}", promotions);
+        // choose promotion which variant price after discount is lowest
+        if (promotions != null && !promotions.isEmpty()) {
+            double minPrice = Double.MAX_VALUE;
+            for (Promotion promotion : promotions) {
+                double discountedPrice = calculateDiscountedPrice(variant, promotion);
+                if (discountedPrice < minPrice) {
+                    minPrice = discountedPrice;
+                    bestPromotion = promotion;
+                }
+            }
+        }
+        double discountPrice = bestPromotion != null ? bestPromotion.getValueType().name().equals(PromotionEnumType.PERCENTAGE.name()) ? (double) variant.getRetailPrice() * bestPromotion.getValue() / 100 : bestPromotion.getValue() : 0;
+        variantSaleResponse.setPromotion(bestPromotion != null ? modelMapper.map(bestPromotion, PromotionResponse.class) : null);
+        variantSaleResponse.setName(variant.getName());
+        variantSaleResponse.setSku(variant.getSku());
+        variantSaleResponse.setWholeSalePrice(variant.getWholeSalePrice());
+        variantSaleResponse.setBaseId(variant.getBaseProduct().getId());
+        variantSaleResponse.setBarcode(variant.getBarcode());
+        variantSaleResponse.setRetailPrice(variant.getRetailPrice());
+        variantSaleResponse.setQuantity(variant.getQuantity());
+        variantSaleResponse.setImportPrice(variant.getImportPrice());
+        variantSaleResponse.setValue1(variant.getValue1());
+        variantSaleResponse.setValue2(variant.getValue2());
+        variantSaleResponse.setValue3(variant.getValue3());
+        variantSaleResponse.setDiscount((int) discountPrice);
+        variantSaleResponse.setDiscountedPrice((int) (variant.getRetailPrice() - discountPrice));
+        variantSaleResponse.setId(variant.getId());
+        variantSaleResponse.setImage(variant.getImage());
+        return variantSaleResponse;
+    }
+
     private List<VariantSaleResponse> getListVariantResponseFromVariant(List<Variant> iVariantDtos) {
         double minPrice = Double.MAX_VALUE;
         List<VariantSaleResponse> variantSaleResponses = new ArrayList<>();
         for (Variant variant : iVariantDtos) {
-            VariantSaleResponse variantSaleResponse = new VariantSaleResponse();
-            Promotion bestPromotion = null;
-            List<Promotion> promotions = promotionRepository.getAllPromotionByVariantId(variant.getId());
-            log.info("Promotion: {}", promotions);
-            // choose promotion which variant price after discount is lowest
-            if (promotions != null && !promotions.isEmpty()) {
-                for (Promotion promotion : promotions) {
-                    double discountedPrice = calculateDiscountedPrice(variant, promotion);
-                    if (discountedPrice < minPrice) {
-                        minPrice = discountedPrice;
-                        bestPromotion = promotion;
-                    }
-                }
-            }
-            double discountPrice = bestPromotion != null ? bestPromotion.getValueType().name().equals(PromotionEnumType.PERCENTAGE.name()) ? (double) variant.getRetailPrice() * bestPromotion.getValue() / 100 : bestPromotion.getValue() : 0;
-            variantSaleResponse.setPromotion(bestPromotion != null ? modelMapper.map(bestPromotion, PromotionResponse.class) : null);
-            variantSaleResponse.setName(variant.getName());
-            variantSaleResponse.setSku(variant.getSku());
-            variantSaleResponse.setWholeSalePrice(variant.getWholeSalePrice());
-            variantSaleResponse.setBaseId(variant.getBaseProduct().getId());
-            variantSaleResponse.setBarcode(variant.getBarcode());
-            variantSaleResponse.setRetailPrice(variant.getRetailPrice());
-            variantSaleResponse.setQuantity(variant.getQuantity());
-            variantSaleResponse.setImportPrice(variant.getImportPrice());
-            variantSaleResponse.setValue1(variant.getValue1());
-            variantSaleResponse.setValue2(variant.getValue2());
-            variantSaleResponse.setValue3(variant.getValue3());
-            variantSaleResponse.setDiscount((int) discountPrice);
-            variantSaleResponse.setDiscountedPrice((int) (variant.getRetailPrice() - discountPrice));
-            variantSaleResponse.setId(variant.getId());
-            variantSaleResponse.setImage(variant.getImage());
-
+            VariantSaleResponse variantSaleResponse = getVariantWithBestPromotion(variant);
             variantSaleResponses.add(variantSaleResponse);
         }
         return variantSaleResponses;
@@ -116,6 +127,41 @@ public class VariantService {
     public List<VariantSaleResponse> getTop10VariantHasPromotion() {
         List<Variant> listTopVariantSale = variantRepository.getTop10VariantHasPromotion();
         return getListVariantResponseFromVariant(listTopVariantSale);
+    }
+
+//    public List<VariantSaleResponse> getTopSaleVariant() {
+//        List<Variant> listTopVariantSale = variantRepository.getTopSaleVariant();
+//        return getListVariantResponseFromVariant(listTopVariantSale);
+//    }
+
+    public List<TopSaleVariant> getTopSaleVariant(java.util.Date startDate, java.util.Date endDate, String type) {
+        List<TopSaleVariant> result = new ArrayList<>();
+        List<Object[]> listVariant = orderRepository.topProductByRevenue(startDate, endDate);
+        if ("revenue".equals(type)) {
+            listVariant = orderRepository.topProductByRevenue(startDate, endDate);
+            System.out.println("revenue");
+        } else if ("quantity".equals(type)) {
+            listVariant = orderRepository.topProductByQuantity(startDate, endDate);
+            System.out.println("quantity");
+        } else if ("order".equals(type)) {
+            listVariant = orderRepository.topProductByOrder(startDate, endDate);
+            System.out.println("order");
+        }
+
+        for (Object[] data : listVariant) {
+            int variantId = (int) data[0];
+            Variant variant = null;
+            variant = variantRepository.findById((Integer) variantId)
+                    .orElseThrow(() -> new NotFoundException("variant " + variantId + " not found"));
+
+            VariantSaleResponse variantSaleResponse = getVariantWithBestPromotion(variant);
+
+            BigDecimal value = BigDecimal.valueOf(((Number) data[1]).doubleValue());
+            TopSaleVariant topOrder = new TopSaleVariant(variantSaleResponse, value);
+            result.add(topOrder);
+        }
+
+        return result;
     }
 
 

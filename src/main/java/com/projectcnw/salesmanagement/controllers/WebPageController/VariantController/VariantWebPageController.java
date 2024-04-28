@@ -3,7 +3,10 @@ package com.projectcnw.salesmanagement.controllers.WebPageController.VariantCont
 
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
+import com.projectcnw.salesmanagement.dto.orderDtos.TopOrder;
+import com.projectcnw.salesmanagement.dto.productDtos.TopSaleVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
+import com.projectcnw.salesmanagement.services.OrderServices.OrderService;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -20,6 +24,7 @@ import java.util.List;
 public class VariantWebPageController {
 
     private final VariantService variantService;
+    private final OrderService orderService;
 
     @GetMapping("")
     public ResponseEntity<PagedResponseObject> getAllBaseProduct(@RequestParam(name = "page", defaultValue = "1") int page,
@@ -50,6 +55,19 @@ public class VariantWebPageController {
                 .responseCode(200)
                 .message("Success")
                 .data(products)
+                .build());
+    }
+
+    @GetMapping("/top-sale")
+    public ResponseEntity<ResponseObject> getTop10VariantOrder() {
+        Date startDate = new Date();
+        startDate.setTime(startDate.getTime() - 30L * 24 * 60 * 60 * 10000);
+        Date endDate = new Date();
+        List<TopSaleVariant> products = variantService.getTopSaleVariant(startDate, endDate, "order");
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(products.subList(0, Math.min(products.size(), 10)))
                 .build());
     }
 

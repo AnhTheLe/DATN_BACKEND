@@ -46,7 +46,10 @@ public class CustomerSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/customer/auth/**").permitAll()
                         .requestMatchers("/api/variants/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "api/user/cart/add").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.POST, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.GET, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.PUT, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.DELETE, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.GET, "/api/customer/me").hasAnyAuthority(RoleType.CUSTOMER.name())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

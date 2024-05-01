@@ -78,7 +78,7 @@ public class VariantService {
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
-    private VariantSaleResponse getVariantWithBestPromotion(Variant variant) {
+    public VariantSaleResponse getVariantWithBestPromotion(Variant variant) {
         VariantSaleResponse variantSaleResponse = new VariantSaleResponse();
         Promotion bestPromotion = null;
         List<Promotion> promotions = promotionRepository.getAllPromotionByVariantId(variant.getId());

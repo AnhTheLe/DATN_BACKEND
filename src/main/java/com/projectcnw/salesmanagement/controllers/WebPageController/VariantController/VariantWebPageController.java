@@ -3,7 +3,6 @@ package com.projectcnw.salesmanagement.controllers.WebPageController.VariantCont
 
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
-import com.projectcnw.salesmanagement.dto.orderDtos.TopOrder;
 import com.projectcnw.salesmanagement.dto.productDtos.TopSaleVariant;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantSaleResponse;
 import com.projectcnw.salesmanagement.services.OrderServices.OrderService;
@@ -32,9 +31,12 @@ public class VariantWebPageController {
                                                                  @RequestParam(name = "query", defaultValue = "") String query,
                                                                  @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
                                                                  @RequestParam(name = "startDate", defaultValue = "") String startDate,
-                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate
+                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate,
+                                                                 @RequestParam(name = "sort_by", defaultValue = "created_at") String sortBy,
+                                                                 @RequestParam(name = "order", defaultValue = "desc") String order
+
     ) {
-        List<VariantSaleResponse> products = variantService.getAllVariantsFilter(page, size, query, categoryIds, startDate, endDate);
+        List<VariantSaleResponse> products = variantService.getAllVariantsFilter(page, size, query, categoryIds, startDate, endDate, sortBy, order);
         long totalItems = variantService.countVariantWebPage(query, categoryIds, startDate, endDate);
         int totalPages = (int) Math.ceil((double) totalItems / size);
         return ResponseEntity.ok(PagedResponseObject.builder()

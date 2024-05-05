@@ -46,6 +46,7 @@ public class CustomerSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/customer/auth/**").permitAll()
                         .requestMatchers("/api/variants/**").permitAll()
+                        .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.GET, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.PUT, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())

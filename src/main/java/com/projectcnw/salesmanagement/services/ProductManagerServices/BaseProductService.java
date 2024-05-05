@@ -1,5 +1,6 @@
 package com.projectcnw.salesmanagement.services.ProductManagerServices;
 
+import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
@@ -12,6 +13,7 @@ import com.projectcnw.salesmanagement.services.CategoryServices.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,6 +120,28 @@ public class BaseProductService {
         BaseProductDto baseProductDto = modelMapper.map(iBaseProductDto, BaseProductDto.class);
         baseProductDto.setVariants(this.getAllVariantOfBaseProductByBaseId(baseId));
         return baseProductDto;
+    }
+
+    public ResponseEntity<ResponseObject> getProductSaleResponse(int baseId) {
+        IBaseProductDto iBaseProductDto = baseProductRepository.findBaseProductById(baseId);
+        if (iBaseProductDto == null) {
+            return ResponseEntity.ok(ResponseObject.builder()
+                    .responseCode(404)
+                    .message("Không tìm thấy sản phẩm")
+                    .build());
+        };
+
+        ProductSaleResponse baseProductDto = modelMapper.map(iBaseProductDto, ProductSaleResponse.class);
+        List<Variant> iVariantDtos = variantRepository.findVariantsByBaseProductId(baseId);
+
+        List<VariantSaleResponse> variantSaleResponses = variantService.getListVariantResponseFromVariant(iVariantDtos);
+        baseProductDto.setVariants(variantSaleResponses);
+        baseProductDto.setImages(variantSaleResponses.stream().map(VariantSaleResponse::getImage).toList());
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(baseProductDto)
+                .build());
     }
 
     @Transactional

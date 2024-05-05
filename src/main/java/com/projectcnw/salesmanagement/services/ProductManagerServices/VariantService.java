@@ -53,7 +53,7 @@ public class VariantService {
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
-    public List<VariantSaleResponse> getAllVariantsFilter(int page, int size, String query, String categoryIds, String start_date, String end_date) {
+    public List<VariantSaleResponse> getAllVariantsFilter(int page, int size, String query, String categoryIds, String start_date, String end_date, String sort_by, String order) {
         List<Integer> categoryIdList = categoryIds == null || categoryIds.isEmpty() ? null : Arrays.stream(categoryIds.split(",")).map(Integer::parseInt).toList();
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
@@ -74,7 +74,7 @@ public class VariantService {
                 log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
             }
         }
-        List<Variant> iVariantDtos = nonJpaVariantRepository.getAllVariantsFilter(page, size, query, categoryIdList, startDate, endDate);
+        List<Variant> iVariantDtos = nonJpaVariantRepository.getAllVariantsFilter(page, size, query, categoryIdList, startDate, endDate, sort_by, order);
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
@@ -114,7 +114,7 @@ public class VariantService {
         return variantSaleResponse;
     }
 
-    private List<VariantSaleResponse> getListVariantResponseFromVariant(List<Variant> iVariantDtos) {
+    public List<VariantSaleResponse> getListVariantResponseFromVariant(List<Variant> iVariantDtos) {
         double minPrice = Double.MAX_VALUE;
         List<VariantSaleResponse> variantSaleResponses = new ArrayList<>();
         for (Variant variant : iVariantDtos) {

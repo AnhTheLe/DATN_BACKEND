@@ -17,12 +17,13 @@ import java.util.List;
 public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.NonJpaVariantRepository {
     @PersistenceContext
     private final EntityManager entityManager;
+
     @Override
-    public List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate) {
+    public List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order) {
         String baseQuery = "SELECT v.* " +
                 "FROM variant v " +
                 "LEFT JOIN base_product bp ON bp.id = v.base_id AND bp.is_deleted = false ";
-        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate);
+        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, sortBy, order);
         productQuery.setFirstResult((page - 1) * size);
         productQuery.setMaxResults(size);
         return (List<Variant>) productQuery.getResultList();
@@ -33,12 +34,12 @@ public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.r
         String baseQuery = "SELECT v.* " +
                 "FROM variant v " +
                 "LEFT JOIN base_product bp ON bp.id = v.base_id AND bp.is_deleted = false ";
-        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate);
+        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, "created_at", "desc");
         productQuery.setFirstResult(0);
         return productQuery.getResultList().size();
     }
 
-    private Query buildNativeQuery(String baseQuery, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate) {
+    private Query buildNativeQuery(String baseQuery, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order) {
         StringBuilder filterQuery = new StringBuilder(baseQuery);
         if (categoryIds != null && !categoryIds.isEmpty()) {
             filterQuery.append("INNER JOIN product_category bpc ON bp.id = bpc.product_id " +
@@ -56,8 +57,12 @@ public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.r
         if (query != null && !query.isEmpty()) {
             filterQuery.append("AND v.name LIKE :query ");
         }
-        filterQuery.append("GROUP BY v.id, v.name, v.is_deleted " +
-                "ORDER BY v.created_at DESC ");
+        filterQuery.append("GROUP BY v.id, v.name, v.is_deleted ");
+        if(sortBy.equals("price")){
+            filterQuery.append("ORDER BY v.").append("retail_price").append(" ").append(order.toUpperCase());
+        } else {
+            filterQuery.append("ORDER BY v.").append(sortBy).append(" ").append(order.toUpperCase());
+        }
         Query productQuery = entityManager.createNativeQuery(filterQuery.toString(), Variant.class);
         if (categoryIds != null && !categoryIds.isEmpty()) {
             productQuery.setParameter("categoryIds", categoryIds);

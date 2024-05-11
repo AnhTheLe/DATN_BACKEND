@@ -157,7 +157,7 @@ public class BaseProductService {
                 && !baseProductDto.getAttribute2().equals("")
                 && baseProductDto.getAttribute2().equals(baseProductDto.getAttribute3())
         ) throw new ProductException("Thuộc tính " + baseProduct.getAttribute2() + " đã tồn tại");
-        if (baseProductDto.getCategoryIds().size() > 0) {
+        if (baseProductDto.getCategoryIds() != null && !baseProductDto.getCategoryIds().isEmpty()) {
             baseProduct.setCategories(categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
         }
         BaseProduct baseProduct1 = baseProductRepository.save(baseProduct);
@@ -351,4 +351,5 @@ public class BaseProductService {
         List<IBaseProductDto> iBaseProductDtos = baseProductRepository.findAllBaseProductsByKeyword(keyword);
         return Arrays.asList(modelMapper.map(iBaseProductDtos, BaseProductDto[].class));
     }
+
 }

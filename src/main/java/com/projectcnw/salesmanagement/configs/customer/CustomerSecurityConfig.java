@@ -47,12 +47,24 @@ public class CustomerSecurityConfig {
                         .requestMatchers("/api/customer/auth/**").permitAll()
                         .requestMatchers("/api/variants/**").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.GET, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.PUT, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                         .requestMatchers(HttpMethod.DELETE, "api/user/cart/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+
                         .requestMatchers(HttpMethod.GET, "/api/customer/me").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/customer/update").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/customer/update-password").hasAnyAuthority(RoleType.CUSTOMER.name())
+
+                        .requestMatchers("/api/address").hasAnyAuthority(RoleType.CUSTOMER.name())
+                        .requestMatchers("/api/address/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+
+                        .requestMatchers("/api/promotion/**").hasAnyAuthority(RoleType.CUSTOMER.name())
+
+                        .requestMatchers("/api/order/**").hasAnyAuthority(RoleType.CUSTOMER.name())
                 )
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(customerJwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

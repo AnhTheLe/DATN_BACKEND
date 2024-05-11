@@ -15,6 +15,12 @@ public interface CategoryRepository extends JpaRepository<Category, Integer>, Jp
     @Query(value = "select * from category where id in :ids", nativeQuery = true)
     List<Category> getListCategoryByIds(@Param("ids") List<Integer> ids);
 
+    //get list Category by product id
+    @Query(value = "SELECT c.id\n" +
+            "FROM category c INNER JOIN product_category pc ON c.id = pc.category_id WHERE pc.product_id = :productId"
+            , nativeQuery = true)
+    List<Integer> getListCategoryByProductId(@Param("productId") int productId);
+
     boolean existsByTitle(String name);
 
     boolean existsBySlug(String slug);

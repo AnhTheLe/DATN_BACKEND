@@ -5,8 +5,11 @@ import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.CreateOrderDto;
 import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.OrderVariant;
 import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
-import com.projectcnw.salesmanagement.models.*;
 import com.projectcnw.salesmanagement.models.Auth.UserEntity;
+import com.projectcnw.salesmanagement.models.Customer;
+import com.projectcnw.salesmanagement.models.Order;
+import com.projectcnw.salesmanagement.models.OrderLine;
+import com.projectcnw.salesmanagement.models.Payment;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.OrderType;
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;
@@ -228,6 +231,9 @@ public class OrderService {
                 .discount(createOrderDto.getDiscount())
                 .userEntity(user)
                 .customer(customer.orElse(null))
+                .customerName(createOrderDto.getCustomerName())
+                .address(createOrderDto.getAddress())
+                .phone(createOrderDto.getPhone())
                 .build();
 
         List<OrderVariant> orderVariantList = createOrderDto.getOrderVariantList();
@@ -271,4 +277,67 @@ public class OrderService {
                 .build();
         paymentRepository.save(payment);
     }
+
+    @Transactional
+    public void createOrderWebPage(CreateOrderDto createOrderDto, String staffPhone) {
+
+        Optional<Customer> customer;
+        if (createOrderDto.getCustomerId() != null) {
+            customer = Optional.ofNullable(customerRepository.findById(createOrderDto.getCustomerId()).orElseThrow(() -> new NotFoundException("customer " + createOrderDto.getCustomerId() + " not found")));
+        } else {
+            customer = customerRepository.findByPhone("-1");
+        }
+
+
+        Order order = Order.builder()
+                .discount(createOrderDto.getDiscount())
+                .customer(customer.orElse(null))
+                .customerName(createOrderDto.getCustomerName())
+                .address(createOrderDto.getAddress())
+                .phone(createOrderDto.getPhone())
+                .build();
+
+        List<OrderVariant> orderVariantList = createOrderDto.getOrderVariantList();
+        List<OrderLine> orderLineList = new ArrayList<>();
+        List<Variant> updatedVariantList = new ArrayList<>();
+        int amount = 0;
+
+        for (OrderVariant orderVariant : orderVariantList) {
+            Variant variant = variantRepository.findById(orderVariant.getVariantId());
+            if (variant == null) {
+                throw new NotFoundException("variant " + orderVariant.getVariantId() + " not found");
+            }
+
+            if (variant.getQuantity() < orderVariant.getQuantity()) {
+                throw new BadRequestException("insufficient stock for order variant " + orderVariant.getVariantId());
+            }
+
+            amount += orderVariant.getQuantity() * variant.getRetailPrice();
+            variant.setQuantity(variant.getQuantity() - orderVariant.getQuantity());
+            updatedVariantList.add(variant);
+            orderLineList.add(OrderLine.builder()
+                    .quantity(orderVariant.getQuantity())
+                    .variant(variant)
+                    .order(order)
+                    .price(variant.getRetailPrice())
+                    .build());
+        }
+
+//        order.setOrderLineList(orderLineList);
+        variantRepository.saveAll(updatedVariantList);
+        Order savedOrder = orderRepository.save(order);
+        orderLineRepository.saveAll(orderLineList);
+
+        Payment payment = Payment.builder()
+                .orderId(savedOrder.getId())
+                .orderType(OrderType.ORDER)
+                .amount(amount - createOrderDto.getDiscount())
+                .paymentMethod(createOrderDto.getPaymentMethod())
+                .payDate(new Date(new java.util.Date().getTime()))
+                .paymentStatus(PaymentStatus.COMPLETE)
+                .build();
+        paymentRepository.save(payment);
+    }
+
 }
+

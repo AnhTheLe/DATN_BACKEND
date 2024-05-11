@@ -1,6 +1,7 @@
 package com.projectcnw.salesmanagement.repositories.PromotionRepository;
 
 import com.projectcnw.salesmanagement.models.Promotion;
+import com.projectcnw.salesmanagement.models.enums.PromotionPolicyApplyType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,4 +19,11 @@ public interface PromotionRepository extends JpaRepository<Promotion, Integer> {
             "ORDER BY p.created_at DESC"
             , nativeQuery = true)
     List<Promotion> getAllPromotionByVariantId(@Param("variantId") int variantId);
+
+    // get Promotion with coupon title
+    @Query(value = "SELECT p.* FROM promotion p WHERE p.title LIKE :title AND p.active = true AND p.policy_apply = :policyApply \n" +
+            "ORDER BY p.created_at DESC"
+            , nativeQuery = true)
+    List<Promotion> getPromotionsByTitleAndPolicyApplyAndActive(@Param("title") String title,@Param("policyApply") String policyApply);
+
 }

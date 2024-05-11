@@ -10,6 +10,8 @@ import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRe
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
 import com.projectcnw.salesmanagement.repositories.PromotionRepository.PromotionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PromotionService {
     private final PromotionRepository promotionRepository;
     private final CategoryRepository categoryRepository;
@@ -60,6 +63,13 @@ public class PromotionService {
                     .responseCode(400).message("Policy apply are required").build());
         }
 
+        //check nếu ngày bắt đầu lớn hơn ngày hôm nay thì set active = false
+        if(promotion.getStartDate() != null && promotion.getStartDate().after(Date.from(Instant.now()))){
+            promotion.setActive(false);
+        }else {
+            promotion.setActive(true);
+        }
+
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200).message("")
                 .data(promotionRepository.save(Promotion.builder()
@@ -70,6 +80,7 @@ public class PromotionService {
                         .valueType(promotion.getValueType())
                         .policyApply(promotion.getPolicyApply())
                         .description(promotion.getDescription())
+                        .active(promotion.isActive())
                         .categories(categories)
                         .products(products)
                         .build())).build());
@@ -136,6 +147,25 @@ public class PromotionService {
                 .responseCode(200).message("Delete promotion success").build());
     }
 
+    public ResponseEntity<ResponseObject> getCouponPromotion (String title) {
+        log.info("title: {}", title);
+        List<Promotion> promotions = promotionRepository.getPromotionsByTitleAndPolicyApplyAndActive(title, PromotionPolicyApplyType.COUPON.name());
+        if(promotions.isEmpty()){
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+                    ResponseObject.builder()
+                            .responseCode(422)
+                            .message("Không tìm thấy mã coupon hợp lệ")
+                            .data(null)
+                            .build()
+            );
+        }
+        return ResponseEntity.ok(
+                ResponseObject.builder()
+                        .responseCode(200)
+                        .message("Áp dụng mã giảm giá thành công")
+                        .data(promotions.get(0))
+                        .build());
+    }
 
 
 }

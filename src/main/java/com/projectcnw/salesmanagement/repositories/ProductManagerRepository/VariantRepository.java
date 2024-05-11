@@ -42,6 +42,12 @@ public interface VariantRepository extends JpaRepository<Variant, Integer> {
             , nativeQuery = true)
     List<Variant> getTop10VariantHasPromotion();
 
+    // find list variant by list category id
+    @Query(value = "SELECT v.*\n" +
+            "FROM variant v INNER JOIN base_product bp ON v.base_id = bp.id INNER JOIN product_category pc ON bp.id = pc.product_id WHERE pc.category_id IN :categoryIds AND v.is_deleted = false AND bp.is_deleted = false ORDER BY v.created_at DESC LIMIT 10"
+            , nativeQuery = true)
+    List<Variant> findVariantsByCategoryIds(@Param("categoryIds") List<Integer> categoryIds);
+
     Variant findById(int variantId);
 
     @Transactional

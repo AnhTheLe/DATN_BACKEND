@@ -1,6 +1,7 @@
 
 package com.projectcnw.salesmanagement.services.ProductManagerServices;
 
+import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.orderDtos.TopOrder;
 import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.dto.promotion.PromotionResponse;
@@ -10,6 +11,7 @@ import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.Promotion;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
+import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRepository;
 import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.impl.NonJpaVariantRepository;
@@ -18,6 +20,7 @@ import com.projectcnw.salesmanagement.repositories.PromotionRepository.Promotion
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +48,8 @@ public class VariantService {
     private final NonJpaVariantRepository nonJpaVariantRepository;
 
     private final OrderRepository orderRepository;
+
+    private final CategoryRepository categoryRepository;
     private ModelMapper modelMapper = new ModelMapper();
 
     public List<VariantSaleResponse> getAllVariants(int page, int size) {
@@ -286,6 +291,24 @@ public class VariantService {
     public List<VariantDto> getAllVariantsByKeyword(String keyword) {
         List<IVariantDto> iVariantDtos = variantRepository.findAllVariantsByKeyword(keyword);
         return Arrays.asList(modelMapper.map(iVariantDtos, VariantDto[].class));
+    }
+
+    public ResponseEntity<ResponseObject> getVariantSuggestions (int productId) {
+        BaseProduct product = baseProductRepository.findById(productId);
+        if (product == null) {
+            return ResponseEntity.badRequest().body(ResponseObject.builder()
+                    .responseCode(400)
+                    .message("Product not found")
+                    .data(null)
+                    .build());
+        };
+        List<Integer> categoryIds = categoryRepository.getListCategoryByProductId(productId);
+        List<Variant> variants = variantRepository.findVariantsByCategoryIds(categoryIds);
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(getListVariantResponseFromVariant(variants))
+                .build());
     }
 
 }

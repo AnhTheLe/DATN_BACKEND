@@ -26,4 +26,10 @@ public class CreateOrderDto {
 
     @NotNull
     private Integer discount;
+
+    private String address;
+
+    private String customerName;
+
+    private String phone;
 }

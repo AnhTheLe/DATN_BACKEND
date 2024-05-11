@@ -29,6 +29,8 @@ public class ProductSaleResponse {
 
     private String attribute3;
 
+    private String description;
+
     private List<String> images;
 
     private List<VariantSaleResponse> variants;

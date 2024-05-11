@@ -31,4 +31,9 @@ public class ProductWebPageController {
         return productService.getProductSaleResponse(id);
     }
 
+    @GetMapping("/{id}/suggestions")
+    public ResponseEntity<ResponseObject> getProductSuggestions(@PathVariable int id) {
+        return variantService.getVariantSuggestions(id);
+    }
+
 }

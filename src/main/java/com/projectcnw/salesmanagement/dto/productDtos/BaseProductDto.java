@@ -27,6 +27,8 @@ public class BaseProductDto extends BaseDto {
 
     private String attribute2;
 
+    private String description;
+
     private String attribute3;
     @NotEmpty(message = "Phải có ít nhất 1 phiên bản")
     private List<VariantDto> variants;

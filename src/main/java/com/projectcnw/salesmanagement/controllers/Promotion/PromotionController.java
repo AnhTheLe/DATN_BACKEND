@@ -35,5 +35,25 @@ public class PromotionController {
         return promotionService.deleteListPromotion(ids);
     }
 
+    @GetMapping("")
+    public ResponseEntity<ResponseObject> getAllPromotion(
+            @RequestParam(defaultValue = "", name = "title") String title,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "10", name = "size") int size,
+            @RequestParam(defaultValue = "", name = "start_date") String startDate,
+            @RequestParam(defaultValue = "", name = "end_date") String endDate,
+            @RequestParam(defaultValue = "", name = "active") String active
+
+    ) {
+        return promotionService.getCouponPromotion(title);
+    }
+
+    @GetMapping("/coupon")
+    public ResponseEntity<ResponseObject> getAllCouponPromotion(
+            @RequestParam(defaultValue = "", name = "title") String title
+    ) {
+        return promotionService.getCouponPromotion(title);
+    }
+
 
 }

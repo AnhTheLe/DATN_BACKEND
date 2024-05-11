@@ -1,5 +1,5 @@
 package com.projectcnw.salesmanagement.models.enums;
 
 public enum PaymentMethod {
-    CASH, CREDIT, TRANSFER
+    CASH, CREDIT, TRANSFER, COD
 }

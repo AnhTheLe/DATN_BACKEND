@@ -1,13 +1,21 @@
 package com.projectcnw.salesmanagement.services.CustomerServices;
 
 
+import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.customer.CustomerSpendingDTO;
+import com.projectcnw.salesmanagement.dto.customer.address.AddressRequest;
 import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
+import com.projectcnw.salesmanagement.models.Address;
 import com.projectcnw.salesmanagement.models.Customer;
+import com.projectcnw.salesmanagement.repositories.CustomerRepositories.AddressReppository.AddressRepository;
 import com.projectcnw.salesmanagement.repositories.CustomerRepositories.CustomerRepository;
+import com.projectcnw.salesmanagement.utils.UserUtil;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,16 +29,18 @@ import java.util.Optional;
 public class CustomerServices {
 
     private final CustomerRepository customerRepository;
+
+    private final AddressRepository addressRepository;
     private ModelMapper modelMapper = new ModelMapper();
 
     public List<Customer> getAllCustomer(int page, int size) {
-        int offset = (page -1)*size;
+        int offset = (page - 1) * size;
         List<Customer> customerList = customerRepository.findAllCustomer(size, offset);
         return customerList;
     }
 
     public List<CustomerSpendingDTO> getAllCustomerBySpending(int page, int size) {
-        int offset = (page -1)*size;
+        int offset = (page - 1) * size;
         List<Object[]> customerDataList = customerRepository.findAllCustomerBySpending(size, offset);
 
         List<CustomerSpendingDTO> customerList = new ArrayList<>();
@@ -107,6 +117,17 @@ public class CustomerServices {
         // Tạo mã khách hàng dựa trên ID
         String customerCode = String.format("CUZ%05d", customerId);
         savedCustomer.setCustomerCode(customerCode);
+
+        if(customer.getAddress() != null) {
+            Address address = new Address();
+            address.setAddress(customer.getAddress());
+            address.setCustomer(savedCustomer);
+            address.setCountry("Việt Nam");
+            address.setCountryCode("VN");
+            address.setIsDefault(true);
+            address.setCustomerName(savedCustomer.getName());
+            addressRepository.save(address);
+        }
 
         // Lưu lại khách hàng với mã khách hàng đã được tạo
         return customerRepository.save(savedCustomer);

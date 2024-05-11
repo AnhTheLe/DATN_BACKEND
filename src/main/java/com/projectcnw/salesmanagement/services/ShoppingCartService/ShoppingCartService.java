@@ -27,7 +27,6 @@ import java.util.*;
 public class ShoppingCartService {
 
     private final ShoppingCartRepository shoppingCartRepository;
-    private final BaseProductRepository productRepository;
     private final VariantRepository variantRepository;
     private final CustomerRepository customerRepository;
     private final VariantService variantService;
@@ -38,20 +37,20 @@ public class ShoppingCartService {
         if (customer.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(400)
-                    .message("Customer is not exists")
+                    .message("Khách hàng không tồn tại")
                     .build());
         }
         Optional<Variant> variant = variantRepository.findById(item.getProductId());
         if (variant.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(400)
-                    .message("Variant is not exists")
+                    .message("Sản phẩm không tồn tại")
                     .build());
         }
         if (item.getQuantity() < 1 || variant.get().getQuantity() < item.getQuantity()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(400)
-                    .message("Invalid product quantity or insufficient product quantity")
+                    .message("Số lượng sản phẩm không hợp lệ hoặc không đủ hàng trong kho")
                     .build());
         }
 
@@ -65,14 +64,14 @@ public class ShoppingCartService {
             shoppingCartRepository.save(newProduct);
             return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
                     .responseCode(200)
-                    .message("Add to cart successful")
+                    .message("Thêm vào giỏ hàng thành công")
                     .data(newProduct)
                     .build());
         } else {
             shoppingCart.setQuantity(shoppingCart.getQuantity() + item.getQuantity());
             return ResponseEntity.status(HttpStatus.OK).body(ResponseObject.builder()
                     .responseCode(200)
-                    .message("Your cart is updated")
+                    .message("Giỏ hàng của bạn đã được cập nhật")
                     .build());
         }
     }

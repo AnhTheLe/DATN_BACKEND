@@ -13,5 +13,6 @@ public interface IBaseProductDto {
     String getAttribute1();
     String getAttribute2();
     String getAttribute3();
+    String getDescription();
 
 }

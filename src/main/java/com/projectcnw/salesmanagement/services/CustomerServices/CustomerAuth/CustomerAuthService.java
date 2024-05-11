@@ -8,6 +8,8 @@ import com.projectcnw.salesmanagement.dto.auth.UserInfoDto;
 import com.projectcnw.salesmanagement.dto.auth.VerifyTokenRequest;
 import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerAuthDto;
 import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerLoginDto;
+import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerUpdatePasswordRequest;
+import com.projectcnw.salesmanagement.dto.customer.CustomerAuth.CustomerUpdateRequest;
 import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
 import com.projectcnw.salesmanagement.models.Auth.Token;
@@ -16,6 +18,7 @@ import com.projectcnw.salesmanagement.models.enums.TokenType;
 import com.projectcnw.salesmanagement.repositories.CustomerRepositories.CustomerRepository;
 import com.projectcnw.salesmanagement.repositories.TokenRepository;
 import com.projectcnw.salesmanagement.services.auth.JwtService;
+import com.projectcnw.salesmanagement.utils.UserUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +80,7 @@ public class CustomerAuthService {
         if(customer.isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(404)
-                    .message("profile not found")
+                    .message("Không tìm thấy thông tin khách hàng")
                     .data(null)
                     .build());
         }
@@ -85,7 +88,7 @@ public class CustomerAuthService {
         if (validUserTokens.isEmpty()) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
                     .responseCode(401)
-                    .message("Token is invalid")
+                    .message("Token không hợp lệ")
                     .data(null)
                     .build());
         }
@@ -163,7 +166,7 @@ public class CustomerAuthService {
         if(customer.isEmpty()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(404)
-                    .message("profile not found")
+                    .message("Không tìm thấy thông tin khách hàng")
                     .data(null)
                     .build());
         }
@@ -172,20 +175,20 @@ public class CustomerAuthService {
         if (validUserTokens.isEmpty()) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
                     .responseCode(401)
-                    .message("Token is invalid")
+                    .message("Token không hợp lệ")
                     .data(null)
                     .build());
         } else if (!jwtService.isTokenValid(request.getToken(), customer.get())) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
                     .responseCode(401)
-                    .message("Token is invalid")
+                    .message("Token không hợp lệ")
                     .data(null)
                     .build());
         };
 
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
-                .message("Token is invalid")
+                .message("Token hợp lệ")
                 .data(customer.get())
                 .build());
     }
@@ -241,5 +244,77 @@ public class CustomerAuthService {
             }
         }
         return null;
+    }
+
+    public ResponseEntity<ResponseObject> updateCustomer (CustomerUpdateRequest customerUpdateRequest){
+        Integer customerId = UserUtil.getCurrentCustomerId();
+        if (customerId == null ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Unauthorized")
+                    .data(null)
+                    .build());
+        }
+        Optional<Customer> customer = userRepository.findById(customerId);
+        if (customer.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(404)
+                    .message("Không tìm thấy thông tin khách hàng")
+                    .data(null)
+                    .build());
+        }
+        customer.get().setName(customerUpdateRequest.getName());
+        customer.get().setAddress(customerUpdateRequest.getAddress());
+        customer.get().setPhone(customerUpdateRequest.getPhone());
+        customer.get().setDateOfBirth(customerUpdateRequest.getDateOfBirth());
+        customer.get().setGender(customerUpdateRequest.getGender());
+        userRepository.save(customer.get());
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(customer.get())
+                .build());
+
+    }
+
+    public ResponseEntity<ResponseObject> updatePassword (CustomerUpdatePasswordRequest customerUpdateRequest){
+        Integer customerId = UserUtil.getCurrentCustomerId();
+        if (customerId == null ) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseObject.builder()
+                    .responseCode(401)
+                    .message("Unauthorized")
+                    .data(null)
+                    .build());
+        }
+        Optional<Customer> customer = userRepository.findById(customerId);
+        if (customer.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(404)
+                    .message("Không tìm thấy thông tin khách hàng")
+                    .data(null)
+                    .build());
+        }
+        if(customerUpdateRequest.getPassword() == null || customerUpdateRequest.getNewPassword() == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(400)
+                    .message("Mật khẩu không được để trống")
+                    .data(null)
+                    .build());
+        }
+        if(!passwordEncoder.matches(customerUpdateRequest.getPassword(), customer.get().getPassword())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(400)
+                    .message("Mật khẩu cũ không đúng")
+                    .data(null)
+                    .build());
+        }
+        customer.get().setPassword(passwordEncoder.encode(customerUpdateRequest.getPassword()));
+        userRepository.save(customer.get());
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Success")
+                .data(customer.get())
+                .build());
+
     }
 }

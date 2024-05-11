@@ -27,6 +27,17 @@ public class Order extends BaseEntity {
     @Column(columnDefinition = "integer default 0")
     private int discount;
 
+    @Column(columnDefinition = "nvarchar(255)")
+    private String address;
+
+    @Column(columnDefinition = "nvarchar(255)")
+    private String customerName;
+
+    @Column(columnDefinition = "nvarchar(255)")
+    private String phone;
+
+
+
     @OneToMany(mappedBy = "order")
     @JsonManagedReference
     private List<OrderLine> orderLineList;

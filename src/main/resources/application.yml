@@ -30,10 +30,16 @@ application:
 
 
 
+#cloudinary:
+#  cloud-name: dnfqh0xor
+#  api-key: 824374795628962
+#  api-secret: ZkW3BqawOuplLWv2Kq--llPkWlk
+#  secure: true
+
 cloudinary:
-  cloud-name: dnfqh0xor
-  api-key: 824374795628962
-  api-secret: ZkW3BqawOuplLWv2Kq--llPkWlk
+  cloud-name: dywq91vhg
+  api-key: 233812116375248
+  api-secret: 0chzY7aRNpCbN8ep6QpK8zs3ZrU
   secure: true
 
 twilio:

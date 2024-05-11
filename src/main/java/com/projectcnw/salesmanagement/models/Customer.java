@@ -49,6 +49,10 @@ public class Customer extends BaseEntity implements UserDetails {
     @JsonIgnore
     private List<Feedback> feedbackList;
 
+    @OneToMany(mappedBy = "customer")
+    @JsonIgnore
+    private List<Address> Addresses;
+
     @ManyToOne()
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "role_id", columnDefinition = "integer default 5")

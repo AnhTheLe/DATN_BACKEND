@@ -26,6 +26,8 @@ public class BaseProduct extends BaseEntity {
 
     private String attribute3;
 
+    private String description;
+
     @ManyToOne
     @JoinColumn(name = "shop_id")
     private Shop shop;

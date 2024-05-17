@@ -16,4 +16,6 @@ public class OrderVariant {
     @Positive
     @NotNull
     private int quantity;
+
+    private int discountPerItem;
 }

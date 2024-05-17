@@ -2,6 +2,7 @@ package com.projectcnw.salesmanagement.services.CategoryServices;
 
 import com.projectcnw.salesmanagement.dto.Category.CategoryRequest;
 import com.projectcnw.salesmanagement.dto.Category.CategoryResponse;
+import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Category;
@@ -25,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.data.jpa.domain.Specification.where;
 
@@ -38,7 +41,7 @@ public class CategoryService {
 
     private final ModelMapper modelMapper;
 
-    public ResponseEntity<ResponseObject> getAllCategory(int page, int size, String startDate, String endDate, String title) {
+    public ResponseEntity<PagedResponseObject> getAllCategory(int page, int size, String startDate, String endDate, String title) {
 
         Specification<Category> spec = where(null);
         Pageable paging = PageRequest.of(page, size, Sort.by(
@@ -49,14 +52,14 @@ public class CategoryService {
         if (!startDate.isEmpty()) {
             LocalDate date = LocalDate.parse(startDate);
             MySpecification esFoodStartDate = new MySpecification();
-            esFoodStartDate.add(new SearchCriteria("created_at", date, SearchOperation.DATE_START));
+            esFoodStartDate.add(new SearchCriteria("createdAt", date, SearchOperation.DATE_START));
             spec = spec.and(esFoodStartDate);
         }
 
         if (!endDate.isEmpty()) {
             LocalDate date = LocalDate.parse(endDate);
             MySpecification esFoodEndDate = new MySpecification();
-            esFoodEndDate.add(new SearchCriteria("created_at", date, SearchOperation.DATE_END));
+            esFoodEndDate.add(new SearchCriteria("createdAt", date, SearchOperation.DATE_END));
             spec = spec.and(esFoodEndDate);
         }
 
@@ -64,8 +67,7 @@ public class CategoryService {
             spec = spec.and(CategorySpecification.hasNameLike(title));
         }
         Page<Category> listCategories = categoryRepository.findAll(spec, paging);
-//        Page<Category> listCategory =
-        Map<String, Object> response = new HashMap<>();
+
         List<Category> list = Arrays.asList(modelMapper.map(listCategories.getContent(), Category[].class));
         List<CategoryResponse> listResponse = new ArrayList<>();
         for (Category category : list) {
@@ -78,16 +80,15 @@ public class CategoryService {
                     productCount(productRepository.countProductByCategory(category.getId())).
                     build());
         }
-
-        response.put("currentPage", listCategories.getNumber());
-        response.put("totalItems", listCategories.getTotalElements());
-        response.put("totalPages", listCategories.getTotalPages());
-        response.put("lineItems", listResponse);
         log.info("Get category by name use paging successfully");
-        return ResponseEntity.ok(ResponseObject.builder()
+        return ResponseEntity.ok(PagedResponseObject.builder()
                 .responseCode(200)
+                .page(listCategories.getNumber())
+                .totalPages(listCategories.getTotalPages())
+                .totalItems(listCategories.getTotalElements())
+                .perPage(listCategories.getSize())
                 .message("Get all category success")
-                .data(response)
+                .data(listResponse)
                 .build());
     }
 
@@ -96,7 +97,7 @@ public class CategoryService {
         if (categoryRepository.existsByTitle(category.getTitle()) || categoryRepository.existsBySlug(category.getSlug())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
                     .responseCode(400)
-                    .message("Category name already exists")
+                    .message("Tên danh mục đã tồn tại")
                     .build());
         }
         List<BaseProduct> listProduct = new ArrayList<>();
@@ -111,7 +112,7 @@ public class CategoryService {
                 .message("Create category success")
                 .data(categoryRepository.save(Category.builder()
                         .title(category.getTitle())
-                        .slug(!category.getSlug().isEmpty() ? category.getSlug() : category.getTitle().toLowerCase().replace(" ", "-"))
+                        .slug(!(category.getSlug() == null || category.getSlug().isEmpty()) ? category.getSlug() : category.getTitle().toLowerCase().replace(" ", "-"))
                         .description(category.getDescription())
                         .products(listProduct)
                         .build()))
@@ -129,9 +130,22 @@ public class CategoryService {
 
         Category categoryUpdate = categoryRepository.findById(id).get();
         categoryUpdate.setTitle(category.getTitle());
-        categoryUpdate.setSlug(!category.getSlug().isEmpty() ? category.getSlug() : category.getTitle().toLowerCase().replace(" ", "-"));
+        categoryUpdate.setSlug(
+                !(category.getSlug() == null || category.getSlug().isEmpty())
+                        ? category.getSlug()
+                        : category.getTitle().toLowerCase().replace(" ", "-")
+        );
         categoryUpdate.setDescription(category.getDescription());
         categoryUpdate.setMetaTitle(category.getMetaTitle());
+        List<BaseProduct> listProduct = new ArrayList<>();
+        for (Integer productId : category.getProductIds()) {
+            if (productRepository.existsById(productId)) {
+                listProduct.add(productRepository.findById(productId).
+                        orElseThrow(() -> new RuntimeException("Product not found")));
+            }
+        }
+        categoryUpdate.setProducts(listProduct);
+
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)
                 .message("Update category success")
@@ -201,6 +215,21 @@ public class CategoryService {
                 .responseCode(200)
                 .message("Delete list product from category success")
                 .data(categoryRepository.save(category))
+                .build());
+    }
+
+    public ResponseEntity<ResponseObject> getCategoryById(Integer id) {
+        if (!categoryRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseObject.builder()
+                    .responseCode(400)
+                    .message("Không tìm thấy danh mục phù hợp")
+                    .build());
+        }
+        Category category = categoryRepository.findById(id).get();
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("Get category by id success")
+                .data(category)
                 .build());
     }
 }

@@ -1,7 +1,9 @@
 package com.projectcnw.salesmanagement.models.Products;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.projectcnw.salesmanagement.models.*;
+import com.projectcnw.salesmanagement.models.BaseEntity;
+import com.projectcnw.salesmanagement.models.Promotion;
+import com.projectcnw.salesmanagement.models.Shop;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -32,12 +34,13 @@ public class BaseProduct extends BaseEntity {
     @JoinColumn(name = "shop_id")
     private Shop shop;
 
-    @OneToMany(mappedBy = "baseProduct",fetch = FetchType.EAGER)
-    private List<Variant> variantList;
+    @OneToMany(mappedBy = "baseProduct", fetch = FetchType.EAGER)
+    private List<Variant> variants;
+
     @Column(name = "is_deleted", columnDefinition = "boolean default false")
     private boolean isDeleted;
 
-    @ManyToMany(mappedBy = "products")
+    @ManyToMany(mappedBy = "products", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonBackReference
     private List<Category> categories;
 

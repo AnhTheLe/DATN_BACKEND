@@ -6,6 +6,7 @@ import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
 import com.projectcnw.salesmanagement.models.enums.PromotionPolicyApplyType;
+import com.projectcnw.salesmanagement.models.enums.PromotionStatusType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,8 +39,11 @@ public class Promotion extends BaseEntity{
     private Date endDate;
 
 
-    @Column(name = "active", columnDefinition = "boolean default true")
-    private boolean active;
+//    @Column(name = "active", columnDefinition = "boolean default true")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "varchar(20) default 'active'")
+    @JsonProperty("status")
+    private PromotionStatusType status;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -49,7 +53,11 @@ public class Promotion extends BaseEntity{
     )
     private List<BaseProduct> products;
 
-    @ManyToMany(mappedBy = "promotions")
-    @JsonBackReference
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "promotion_category",
+            joinColumns = @JoinColumn(name = "promotion_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
     private List<Category> categories;
 }

@@ -36,8 +36,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             " c.phone AS phone," +
             " c.id AS customerId," +
             " o.created_at AS createdAt," +
-            " u.full_name AS staffName," +
-            " p.payment_status AS paymentStatus," +
+            " COALESCE(u.full_name, NULL) AS staffName," +  " p.payment_status AS paymentStatus," +
             " p.amount AS amount," +
             " r.id AS returnOrderId," +
             " r.amount AS returnAmount" +
@@ -45,8 +44,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             " _order o" +
             " JOIN" +
             " customer c ON o.customer_id = c.id" +
-            " JOIN" +
-            " user u ON o.person_in_charge = u.id" +
+            " LEFT JOIN" +  " user u ON o.person_in_charge = u.id" +
             " JOIN" +
             " payment p ON p.order_id = o.id AND p.order_type = 'ORDER'\n" +
             " LEFT JOIN (" +
@@ -123,4 +121,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 //    @Query("SELECT new com.sapo.salemanagement.dto.orderdtos.OrderStatistical(sum(o.quantity), count(distinct o.order.id), sum(o.price)) FROM OrderLine o WHERE o.createdAt >= :startDate AND o.createdAt <= :endDate")
 //    List<OrderStatistical> statisticalListByTime(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
+    List<Order> getAllByCustomer_Id(int customerId);
 }

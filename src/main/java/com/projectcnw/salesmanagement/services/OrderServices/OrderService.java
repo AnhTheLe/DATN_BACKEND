@@ -1,5 +1,6 @@
 package com.projectcnw.salesmanagement.services.OrderServices;
 
+import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.orderDtos.*;
 import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.CreateOrderDto;
 import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.OrderVariant;
@@ -24,6 +25,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -191,7 +193,16 @@ public class OrderService {
                     List<OrderLineDTO> orderLines = order.getOrderLineList().stream()
                             .map(orderLine -> new OrderLineDTO(orderLine.getQuantity(), orderLine.getReturnQuantity(), orderLine.getPrice(), orderLine.getVariant()))
                             .collect(Collectors.toList());
-                    return new OrderListByCustomerDto(order.getId(), order.getUserEntity().getFullName(), order.getDiscount(), orderLines, paymentRepository.findPaymentByOrder(order.getId()));
+                    return OrderListByCustomerDto.builder()
+                            .orderId(order.getId())
+                            .staffFullName(order.getUserEntity().getFullName())
+                            .discount(order.getDiscount())
+                            .orderLines(orderLines)
+                            .payment(payment)
+                            .address(order.getAddress())
+                            .phone(order.getPhone())
+                            .customerName(order.getCustomerName())
+                            .build();
                 })
                 .collect(Collectors.toList());
 
@@ -302,6 +313,7 @@ public class OrderService {
         List<Variant> updatedVariantList = new ArrayList<>();
         int amount = 0;
 
+
         for (OrderVariant orderVariant : orderVariantList) {
             Variant variant = variantRepository.findById(orderVariant.getVariantId());
             if (variant == null) {
@@ -312,14 +324,14 @@ public class OrderService {
                 throw new BadRequestException("insufficient stock for order variant " + orderVariant.getVariantId());
             }
 
-            amount += orderVariant.getQuantity() * variant.getRetailPrice();
+            amount += orderVariant.getQuantity() * (variant.getRetailPrice() - orderVariant.getDiscountPerItem());
             variant.setQuantity(variant.getQuantity() - orderVariant.getQuantity());
             updatedVariantList.add(variant);
             orderLineList.add(OrderLine.builder()
                     .quantity(orderVariant.getQuantity())
                     .variant(variant)
                     .order(order)
-                    .price(variant.getRetailPrice())
+                    .price(variant.getRetailPrice() - orderVariant.getDiscountPerItem())
                     .build());
         }
 
@@ -331,12 +343,71 @@ public class OrderService {
         Payment payment = Payment.builder()
                 .orderId(savedOrder.getId())
                 .orderType(OrderType.ORDER)
-                .amount(amount - createOrderDto.getDiscount())
+                .amount(amount - createOrderDto.getDiscount() + createOrderDto.getShippingFee())
                 .paymentMethod(createOrderDto.getPaymentMethod())
                 .payDate(new Date(new java.util.Date().getTime()))
                 .paymentStatus(PaymentStatus.COMPLETE)
                 .build();
         paymentRepository.save(payment);
+    }
+
+    public ResponseEntity<ResponseObject> getAllOrderByCustomerId(int customerId) {
+        List<Order> orderList = orderRepository.getAllByCustomer_Id(customerId);
+        List<OrderListByCustomerDto> orderListByCustomer = orderList.stream()
+                .map(order -> {
+                    Payment payment = paymentRepository.findPaymentByOrder(order.getId());
+                    List<OrderLineDTO> orderLines = order.getOrderLineList().stream()
+                            .map(orderLine -> new OrderLineDTO(orderLine.getQuantity(), orderLine.getReturnQuantity(), orderLine.getPrice(), orderLine.getVariant()))
+                            .collect(Collectors.toList());
+                    return OrderListByCustomerDto.builder()
+                            .orderId(order.getId())
+                            .discount(order.getDiscount())
+                            .orderLines(orderLines)
+                            .payment(payment)
+                            .address(order.getAddress())
+                            .phone(order.getPhone())
+                            .customerName(order.getCustomerName())
+                            .build();
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200)
+                .message("success")
+                .data(orderListByCustomer)
+                .build());
+    }
+
+    public ResponseEntity<ResponseObject> getOrderDetail(int id) {
+        Optional<Order> orderDetail = orderRepository.findById(id);
+        if(orderDetail.isEmpty()) {
+            return ResponseEntity.ok(ResponseObject.builder()
+                    .message("order not found")
+                    .responseCode(404)
+                    .build());
+        }
+
+        OrderListByCustomerDto orderDetailInfo = OrderListByCustomerDto.builder()
+                .orderId(orderDetail.get().getId())
+                .discount(orderDetail.get().getDiscount())
+                .orderLines(orderDetail.get().getOrderLineList().stream()
+                        .map(orderLine -> OrderLineDTO.builder()
+                                .quantity(orderLine.getQuantity())
+                                .returnQuantity(orderLine.getReturnQuantity())
+                                .price(orderLine.getPrice())
+                                .variant(orderLine.getVariant())
+                                .build())
+                        .collect(Collectors.toList()))
+                .payment(paymentRepository.findPaymentByOrder(orderDetail.get().getId()))
+                .address(orderDetail.get().getAddress())
+                .phone(orderDetail.get().getPhone())
+                .customerName(orderDetail.get().getCustomerName())
+                .build();
+
+        return ResponseEntity.ok(ResponseObject.builder()
+                .data(orderDetailInfo)
+                .message("success")
+                .responseCode(200)
+                .build());
     }
 
 }

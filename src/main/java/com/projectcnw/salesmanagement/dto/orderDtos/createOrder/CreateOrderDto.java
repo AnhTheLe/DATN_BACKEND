@@ -32,4 +32,6 @@ public class CreateOrderDto {
     private String customerName;
 
     private String phone;
+
+    private Integer shippingFee;
 }

@@ -1,9 +1,11 @@
 package com.projectcnw.salesmanagement.services.ProductManagerServices;
 
+import com.projectcnw.salesmanagement.dto.Category.CategoryResponse;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.productDtos.*;
 import com.projectcnw.salesmanagement.exceptions.ProductManagerExceptions.ProductException;
 import com.projectcnw.salesmanagement.models.Products.BaseProduct;
+import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
@@ -12,6 +14,7 @@ import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.Vari
 import com.projectcnw.salesmanagement.services.CategoryServices.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.projectcnw.salesmanagement.utils.Utils.mapListCategoryToListCategoryResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +47,6 @@ public class BaseProductService {
 
     private final VariantService variantService;
     private ModelMapper modelMapper = new ModelMapper();
-
 
 
     public List<BaseProductDto> getAll(int page, int size, String query, String categoryIds, String start_date, String end_date) {
@@ -71,10 +75,16 @@ public class BaseProductService {
 
         List<BaseProductDto> baseProducts = new ArrayList<>();
         for (BaseProduct baseProduct : iBaseProductDtos) {
-            BaseProductDto baseProductDto = modelMapper.map(baseProduct, BaseProductDto.class);
-            baseProductDto.setVariantNumber(baseProduct.getVariantList().size());
-            baseProductDto.setQuantity(baseProduct.getVariantList().stream().mapToInt(Variant::getQuantity).sum());
-            baseProductDto.setVariants(null);
+            BaseProductDto baseProductDto = new BaseProductDto();
+            baseProductDto.setId(baseProduct.getId());
+            baseProductDto.setName(baseProduct.getName());
+            baseProductDto.setLabel(baseProduct.getLabel());
+            baseProductDto.setDescription(baseProduct.getDescription());
+            baseProductDto.setCreatedAt(baseProduct.getCreatedAt());
+            baseProductDto.setVariantNumber(baseProduct.getVariants().size());
+            baseProductDto.setQuantity(baseProduct.getVariants().stream().mapToInt(Variant::getQuantity).sum());
+            baseProductDto.setVariants(baseProduct.getVariants().stream().map(variant -> modelMapper.map(variant, VariantDto.class)).toList());
+            baseProductDto.setListCategories(mapListCategoryToListCategoryResponse(categoryRepository.getListCategoryByProductId(baseProduct.getId())));
             baseProducts.add(baseProductDto);
         }
 
@@ -82,7 +92,7 @@ public class BaseProductService {
 //        return new PageImpl<>(baseProducts, pageable, baseProducts.size());
     }
 
-    public int countProducts (int page, int size, String query, String categoryIds, String start_date, String end_date) {
+    public int countProducts(int page, int size, String query, String categoryIds, String start_date, String end_date) {
         List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
@@ -119,6 +129,19 @@ public class BaseProductService {
 
         BaseProductDto baseProductDto = modelMapper.map(iBaseProductDto, BaseProductDto.class);
         baseProductDto.setVariants(this.getAllVariantOfBaseProductByBaseId(baseId));
+        List<Category> categories = categoryRepository.getListCategoryByIds(categoryRepository.getListCategoryIdByProductId(baseId));
+        List<CategoryResponse> listResponse = new ArrayList<>();
+        for (Category category : categories) {
+            listResponse.add(CategoryResponse.builder().
+                    id(category.getId()).
+                    title(category.getTitle()).
+                    slug(category.getSlug()).
+                    description(category.getDescription()).
+                    metaTitle(category.getMetaTitle()).
+                    productCount(baseProductRepository.countProductByCategory(category.getId())).
+                    build());
+        }
+        baseProductDto.setListCategories(listResponse);
         return baseProductDto;
     }
 
@@ -129,7 +152,7 @@ public class BaseProductService {
                     .responseCode(404)
                     .message("Không tìm thấy sản phẩm")
                     .build());
-        };
+        }
 
         ProductSaleResponse baseProductDto = modelMapper.map(iBaseProductDto, ProductSaleResponse.class);
         List<Variant> iVariantDtos = variantRepository.findVariantsByBaseProductId(baseId);
@@ -200,6 +223,28 @@ public class BaseProductService {
         return this.getBaseProductById(baseProduct1.getId());
     }
 
+    public void updateProductCategories(@NotNull BaseProduct baseProduct, List<Category> newCategories) {
+        // Xóa các liên kết cũ giữa BaseProduct và Category
+        for (Category category : baseProduct.getCategories()) {
+            category.getProducts().remove(baseProduct);
+        }
+
+        // Xóa các liên kết cũ từ BaseProduct
+        baseProduct.getCategories().clear();
+
+        // Thêm các liên kết mới giữa BaseProduct và Category
+        for (Category category : newCategories) {
+            category.getProducts().add(baseProduct);
+        }
+
+        // Cập nhật danh sách Category trong BaseProduct
+        baseProduct.setCategories(newCategories);
+
+        // Lưu BaseProduct và các thay đổi vào cơ sở dữ liệu
+        baseProductRepository.save(baseProduct);
+    }
+
+
     @Transactional
     public BaseProductDto updateBaseProduct(int baseId, BaseProductDto baseProductDto) {
         BaseProduct baseProduct = baseProductRepository.findById(baseId);
@@ -207,13 +252,19 @@ public class BaseProductService {
         if (baseProductDto.getName() == null || baseProductDto.getName().isBlank())
             throw new ProductException("Tên sản phẩm không được trống");
 
-        if (baseProductDto.getCategoryIds().size() > 0) {
-            baseProduct.setCategories(categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
+        if (baseProductDto.getCategoryIds() != null && !baseProductDto.getCategoryIds().isEmpty()) {
+            updateProductCategories(baseProduct, categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
         }
-        baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel());
+        baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel(), baseProduct.getDescription());
         BaseProduct baseProduct1 = baseProductRepository.findById(baseId);
 
-        return modelMapper.map(baseProduct1, BaseProductDto.class);
+        BaseProductDto baseProductDto1 = modelMapper.map(baseProduct1, BaseProductDto.class);
+        List<Category> categories = categoryRepository.getListCategoryByIds(categoryRepository.getListCategoryIdByProductId(baseId));
+
+        baseProductDto1.setListCategories(mapListCategoryToListCategoryResponse(categories));
+        return baseProductDto1;
+
+//        return modelMapper.map(baseProduct1, BaseProductDto.class);
     }
 
     @Transactional
@@ -316,7 +367,7 @@ public class BaseProductService {
             baseProductRepository.updateNameAttribute2(baseId, baseProduct.getAttribute3());
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant : baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariants()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue1(variant.getValue2());
                 variant.setValue2(variant.getValue3());
@@ -327,7 +378,7 @@ public class BaseProductService {
             baseProductRepository.updateNameAttribute2(baseId, baseProduct.getAttribute3());
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant : baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariants()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue2(variant.getValue3());
                 variant.setValue3("");
@@ -336,7 +387,7 @@ public class BaseProductService {
         } else if (keyAttribute.equals("attribute3")) {
             baseProductRepository.updateNameAttribute3(baseId, "");
 
-            for (Variant variant : baseProduct.getVariantList()) {
+            for (Variant variant : baseProduct.getVariants()) {
 //                VariantDto variantDto = modelMapper.map(variant, VariantDto.class);
                 variant.setValue3("");
                 variantRepository.save(variant);

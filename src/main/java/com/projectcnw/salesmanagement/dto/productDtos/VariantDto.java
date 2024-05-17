@@ -20,7 +20,6 @@ import lombok.Setter;
     private String name;
     @NotNull(message = "Số lượng không được trống")
     @Min(value = 0, message = "Số lượng phải lớn hơn 0")
-    @Max(value = 9999, message = "Số lượng phải nhỏ hơn 9999")
     private int quantity;
     @NotNull(message = "Giá nhập không được trống")
     @Min(value = 0, message = "Giá nhập không được âm")

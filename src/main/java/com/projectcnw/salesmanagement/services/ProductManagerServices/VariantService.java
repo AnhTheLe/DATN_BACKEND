@@ -302,7 +302,7 @@ public class VariantService {
                     .data(null)
                     .build());
         };
-        List<Integer> categoryIds = categoryRepository.getListCategoryByProductId(productId);
+        List<Integer> categoryIds = categoryRepository.getListCategoryIdByProductId(productId);
         List<Variant> variants = variantRepository.findVariantsByCategoryIds(categoryIds);
         return ResponseEntity.ok(ResponseObject.builder()
                 .responseCode(200)

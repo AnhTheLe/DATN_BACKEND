@@ -1,16 +1,20 @@
 package com.projectcnw.salesmanagement.dto.productDtos;
 
 import com.projectcnw.salesmanagement.dto.BaseDto;
+import com.projectcnw.salesmanagement.dto.Category.CategoryResponse;
+import com.projectcnw.salesmanagement.models.Products.Category;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BaseProductDto extends BaseDto {
     @NotNull(message = "Tên sản phẩm không được trống")
     @NotBlank(message = "Tên sản phẩm không được trống")
@@ -33,5 +37,6 @@ public class BaseProductDto extends BaseDto {
     @NotEmpty(message = "Phải có ít nhất 1 phiên bản")
     private List<VariantDto> variants;
 
+    private List<CategoryResponse> listCategories;
 
 }

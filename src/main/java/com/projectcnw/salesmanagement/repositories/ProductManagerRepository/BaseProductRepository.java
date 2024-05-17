@@ -45,7 +45,7 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
     // getListBaseProductByCategoryIds
     @Query(value = "SELECT bp.*" +
             "FROM base_product bp\n" +
-            "LEFT JOIN product_category pc ON bp.id = pc.base_id\n" +
+            "LEFT JOIN product_category pc ON bp.id = pc.product_id\n" +
             "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
             "WHERE pc.category_id IN :ids AND bp.is_deleted = false\n" +
             "GROUP BY bp.id, bp.name, bp.is_deleted\n" +
@@ -54,13 +54,13 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
 
     // count base-product by categoryId
     //countProductByCategory
-    @Query(value = "SELECT COUNT(*) FROM product_category bc LEFT JOIN base_product bp ON bp.is_deleted = false WHERE bc.category_id = :categoryId", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM product_category pc LEFT JOIN base_product bp ON pc.product_id = bp.id AND bp.is_deleted = false WHERE pc.category_id = :categoryId", nativeQuery = true)
     int countProductByCategory(@Param("categoryId") int categoryId);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE base_product SET name =:name, label=:label WHERE id =:baseId", nativeQuery = true)
-    void updateBaseProduct(@Param("baseId") int baseId, @Param("name") String name, @Param("label") String label);
+    @Query(value = "UPDATE base_product SET name =:name, label=:label, description=:description WHERE id =:baseId", nativeQuery = true)
+    void updateBaseProduct(@Param("baseId") int baseId, @Param("name") String name, @Param("label") String label, @Param("description") String description);
 
     @Query(value = "SELECT bp.id AS id,\n" +
             "       bp.name AS name,\n" +

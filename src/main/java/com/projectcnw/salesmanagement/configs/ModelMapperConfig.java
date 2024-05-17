@@ -1,5 +1,7 @@
 package com.projectcnw.salesmanagement.configs;
 
+import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
+import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;

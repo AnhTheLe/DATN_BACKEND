@@ -1,15 +1,13 @@
 package com.projectcnw.salesmanagement.dto.orderDtos;
 
 import com.projectcnw.salesmanagement.models.Products.Variant;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderLineDTO {
     private int quantity;
     private int returnQuantity;

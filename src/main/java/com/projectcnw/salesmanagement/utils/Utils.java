@@ -1,10 +1,14 @@
 package com.projectcnw.salesmanagement.utils;
 
+import com.projectcnw.salesmanagement.dto.Category.CategoryResponse;
+import com.projectcnw.salesmanagement.models.Products.Category;
+
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class Utils {
 
@@ -28,5 +32,20 @@ public class Utils {
             // Xử lý nếu có lỗi chuyển đổi
         }
         return null;
+    }
+
+    public static CategoryResponse mapCategoryToCategoryResponse(Category category) {
+        return CategoryResponse.builder()
+                .id(category.getId())
+                .title(category.getTitle())
+                .metaTitle(category.getMetaTitle())
+                .slug(category.getSlug())
+                .description(category.getDescription())
+                .productCount(category.getProducts().size())
+                .build();
+    }
+
+    public static List<CategoryResponse> mapListCategoryToListCategoryResponse(List<Category> categories) {
+        return categories.stream().map(Utils::mapCategoryToCategoryResponse).toList();
     }
 }

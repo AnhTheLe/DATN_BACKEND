@@ -3,6 +3,7 @@ package com.projectcnw.salesmanagement.controllers.CategoryController;
 
 import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.Category.CategoryRequest;
+import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.services.CategoryServices.CategoryService;
 import jakarta.validation.Valid;
@@ -20,14 +21,19 @@ public class CategoryController extends BaseController {
     private final CategoryService categoryService;
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject> getAll(
-            @RequestParam(defaultValue = "", name = "title") String title,
+    public ResponseEntity<PagedResponseObject> getAll(
+            @RequestParam(defaultValue = "", name = "query") String title,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "10", name = "size") int size,
-            @RequestParam(defaultValue = "", name = "start_date") String startDate,
-            @RequestParam(defaultValue = "", name = "end_date") String endDate
+            @RequestParam(defaultValue = "10", name = "pageSize") int size,
+            @RequestParam(defaultValue = "", name = "startDate") String startDate,
+            @RequestParam(defaultValue = "", name = "endDate") String endDate
     ) {
         return categoryService.getAllCategory(page, size, startDate, endDate, title);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseObject> getCategoryById(@PathVariable Integer id){
+        return categoryService.getCategoryById(id);
     }
 
     @PostMapping("/create")

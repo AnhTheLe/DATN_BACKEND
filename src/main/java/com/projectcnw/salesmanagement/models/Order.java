@@ -38,7 +38,7 @@ public class Order extends BaseEntity {
 
 
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<OrderLine> orderLineList;
 

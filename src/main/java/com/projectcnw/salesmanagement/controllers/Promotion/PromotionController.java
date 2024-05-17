@@ -1,7 +1,9 @@
 package com.projectcnw.salesmanagement.controllers.Promotion;
 
+import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.promotion.PromotionRequest;
+import com.projectcnw.salesmanagement.models.Promotion;
 import com.projectcnw.salesmanagement.services.PromotionServices.PromotionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,16 +38,29 @@ public class PromotionController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseObject> getAllPromotion(
-            @RequestParam(defaultValue = "", name = "title") String title,
+    public ResponseEntity<PagedResponseObject> getAllPromotion(
+            @RequestParam(defaultValue = "", name = "query") String query,
             @RequestParam(defaultValue = "0", name = "page") int page,
-            @RequestParam(defaultValue = "10", name = "size") int size,
-            @RequestParam(defaultValue = "", name = "start_date") String startDate,
-            @RequestParam(defaultValue = "", name = "end_date") String endDate,
-            @RequestParam(defaultValue = "", name = "active") String active
+            @RequestParam(defaultValue = "20", name = "pageSize") int size,
+            @RequestParam(defaultValue = "", name = "startDate") String startDate,
+            @RequestParam(defaultValue = "", name = "status") String status,
+            @RequestParam(defaultValue = "id", name = "sortBy") String sortBy,
+            @RequestParam(defaultValue = "desc", name = "order") String order,
+            @RequestParam(defaultValue = "", name = "policyApply") String policyApply
 
     ) {
-        return promotionService.getCouponPromotion(title);
+        List<Promotion> promotions = promotionService.getAllPromotionByFilter(page, size, query, policyApply, status, startDate, sortBy, order);
+        long totalItems = promotionService.countPromotion(query, policyApply, status, startDate, sortBy, order);
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        return ResponseEntity.ok(PagedResponseObject.builder()
+                .page(page)
+                .perPage(size)
+                .totalItems(totalItems)
+                .totalPages(totalPages)
+                .responseCode(200)
+                .message("Success")
+                .data(promotions)
+                .build());
     }
 
     @GetMapping("/coupon")
@@ -53,6 +68,11 @@ public class PromotionController {
             @RequestParam(defaultValue = "", name = "title") String title
     ) {
         return promotionService.getCouponPromotion(title);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseObject> getPromotionById(@PathVariable("id") int id) {
+        return promotionService.getPromotionById(id);
     }
 
 

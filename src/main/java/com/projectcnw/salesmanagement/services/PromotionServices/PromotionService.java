@@ -6,8 +6,10 @@ import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.Promotion;
 import com.projectcnw.salesmanagement.models.enums.PromotionPolicyApplyType;
+import com.projectcnw.salesmanagement.models.enums.PromotionStatusType;
 import com.projectcnw.salesmanagement.repositories.CategoryRepository.CategoryRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.BaseProductRepository;
+import com.projectcnw.salesmanagement.repositories.PromotionRepository.NonJpaPromotionRepository.NonJpaPromotionRepositoryImpl;
 import com.projectcnw.salesmanagement.repositories.PromotionRepository.PromotionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +35,7 @@ public class PromotionService {
     private final PromotionRepository promotionRepository;
     private final CategoryRepository categoryRepository;
     private final BaseProductRepository baseProductRepository;
+    private final NonJpaPromotionRepositoryImpl nonJpaPromotionRepository;
 
     @Transactional
     public ResponseEntity<ResponseObject> createPromotion(PromotionRequest promotion) {
@@ -46,28 +52,28 @@ public class PromotionService {
         if (promotion.getPolicyApply() == PromotionPolicyApplyType.PRODUCT && promotion.getProductIds() != null) {
             products = baseProductRepository.getListBaseProductByIds(promotion.getProductIds());
         }
-        if(promotion.getTitle() == null) {
+        if (promotion.getTitle() == null) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .responseCode(400).message("Title are required").build());
         }
-        if(promotion.getValue() == null) {
+        if (promotion.getValue() == null) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .responseCode(400).message("Value are required").build());
         }
-        if(promotion.getValueType() == null) {
+        if (promotion.getValueType() == null) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .responseCode(400).message("Value type are required").build());
         }
-        if(promotion.getPolicyApply() == null) {
+        if (promotion.getPolicyApply() == null) {
             return ResponseEntity.badRequest().body(ResponseObject.builder()
                     .responseCode(400).message("Policy apply are required").build());
         }
 
         //check nếu ngày bắt đầu lớn hơn ngày hôm nay thì set active = false
-        if(promotion.getStartDate() != null && promotion.getStartDate().after(Date.from(Instant.now()))){
-            promotion.setActive(false);
-        }else {
-            promotion.setActive(true);
+        if (promotion.getStartDate() != null && promotion.getStartDate().after(Date.from(Instant.now()))) {
+            promotion.setStatus(PromotionStatusType.scheduled);
+        } else {
+            promotion.setStatus(PromotionStatusType.active);
         }
 
         return ResponseEntity.ok(ResponseObject.builder()
@@ -80,7 +86,7 @@ public class PromotionService {
                         .valueType(promotion.getValueType())
                         .policyApply(promotion.getPolicyApply())
                         .description(promotion.getDescription())
-                        .active(promotion.isActive())
+                        .status(promotion.getStatus())
                         .categories(categories)
                         .products(products)
                         .build())).build());
@@ -96,20 +102,42 @@ public class PromotionService {
         List<Category> categories = new ArrayList<>();
         List<BaseProduct> products = new ArrayList<>();
 
-        if (promotion.getPolicyApply() == PromotionPolicyApplyType.CATEGORY && promotion.getCategoryIds() != null) {
-            categories = categoryRepository.getListCategoryByIds(promotion.getCategoryIds());
+        // check trường policy apply cảu pômtion nếu mà khác với trường cũ thì xoá toàn bộ category và product và reset lại theo promotion mới
+        if (promotion.getPolicyApply() != promotionUpdate.getPolicyApply()) {
+            promotionUpdate.setCategories(new ArrayList<>());
+            promotionUpdate.setProducts(new ArrayList<>());
+            if (promotion.getPolicyApply() == PromotionPolicyApplyType.CATEGORY && promotion.getCategoryIds() != null) {
+                categories = categoryRepository.getListCategoryByIds(promotion.getCategoryIds());
+                products = baseProductRepository.getListBaseProductByCategoryIds(promotion.getCategoryIds());
+            }
+            if (promotion.getPolicyApply() == PromotionPolicyApplyType.PRODUCT && promotion.getProductIds() != null) {
+                products = baseProductRepository.getListBaseProductByIds(promotion.getProductIds());
+            }
+        } else {
+            if (promotion.getPolicyApply() == PromotionPolicyApplyType.CATEGORY && promotion.getCategoryIds() != null) {
+                categories = categoryRepository.getListCategoryByIds(promotion.getCategoryIds());
+                products = baseProductRepository.getListBaseProductByCategoryIds(promotion.getCategoryIds());
+            }
+            if (promotion.getPolicyApply() == PromotionPolicyApplyType.PRODUCT && promotion.getProductIds() != null) {
+                products = baseProductRepository.getListBaseProductByIds(promotion.getProductIds());
+            }
         }
-        if (promotion.getPolicyApply() == PromotionPolicyApplyType.PRODUCT && promotion.getProductIds() != null) {
-            products = baseProductRepository.getListBaseProductByIds(promotion.getProductIds());
+        //check nếu ngày bắt đầu lớn hơn ngày hôm nay thì set active = false
+        if (promotion.getStartDate() != null && promotion.getStartDate().after(Date.from(Instant.now()))) {
+            promotion.setStatus(PromotionStatusType.scheduled);
+        } else {
+            promotion.setStatus(PromotionStatusType.active);
         }
+
         promotionUpdate.setTitle(promotion.getTitle());
         promotionUpdate.setValue(promotion.getValue());
         promotionUpdate.setStartDate(promotion.getStartDate());
         promotionUpdate.setEndDate(promotion.getEndDate());
-        promotionUpdate.setActive(promotion.isActive());
+        promotionUpdate.setStatus(promotion.getStatus());
         promotionUpdate.setValueType(promotion.getValueType());
         promotionUpdate.setPolicyApply(promotion.getPolicyApply());
         promotionUpdate.setDescription(promotion.getDescription());
+        promotionUpdate.setStatus(promotion.getStatus());
         promotionUpdate.setCategories(categories);
         promotionUpdate.setProducts(products);
 
@@ -147,10 +175,10 @@ public class PromotionService {
                 .responseCode(200).message("Delete promotion success").build());
     }
 
-    public ResponseEntity<ResponseObject> getCouponPromotion (String title) {
+    public ResponseEntity<ResponseObject> getCouponPromotion(String title) {
         log.info("title: {}", title);
         List<Promotion> promotions = promotionRepository.getPromotionsByTitleAndPolicyApplyAndActive(title, PromotionPolicyApplyType.COUPON.name());
-        if(promotions.isEmpty()){
+        if (promotions.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                     ResponseObject.builder()
                             .responseCode(422)
@@ -165,6 +193,46 @@ public class PromotionService {
                         .message("Áp dụng mã giảm giá thành công")
                         .data(promotions.get(0))
                         .build());
+    }
+
+    public List<Promotion> getAllPromotionByFilter(int page, int size,String query, String policyApply, String status, String start_date, String sort_by, String order) {
+        LocalDateTime startDate = null;
+
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        return nonJpaPromotionRepository.getAllPromotionFilter(page, size,query, policyApply,  status, startDate, sort_by, order);
+    }
+
+    public long countPromotion(String query, String policyApply, String status, String start_date, String sort_by, String order) {
+        LocalDateTime startDate = null;
+
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        return nonJpaPromotionRepository.countPromotion(query, policyApply, status, startDate, sort_by, order);
+    }
+
+
+    public ResponseEntity<ResponseObject> getPromotionById (Integer id) {
+        Promotion promotion = promotionRepository.findById(id).orElse(null);
+        if (promotion == null) {
+            return ResponseEntity.badRequest().body(ResponseObject.builder()
+                    .responseCode(400).message("Không tìm thấy khuyến mại phù hợp").build());
+        }
+        return ResponseEntity.ok(ResponseObject.builder()
+                .responseCode(200).message("Get promotion success")
+                .data(promotion).build());
     }
 
 

@@ -5,6 +5,7 @@ import com.projectcnw.salesmanagement.models.Products.BaseProduct;
 import com.projectcnw.salesmanagement.models.Products.Category;
 import com.projectcnw.salesmanagement.models.enums.PromotionEnumType;
 import com.projectcnw.salesmanagement.models.enums.PromotionPolicyApplyType;
+import com.projectcnw.salesmanagement.models.enums.PromotionStatusType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,11 +28,11 @@ public class PromotionRequest {
     private Date startDate;
     private Date endDate;
 
-    private boolean active;
-
     private PromotionEnumType valueType;
 
     private PromotionPolicyApplyType policyApply;
+
+    private PromotionStatusType status;
 
     private String description;
 

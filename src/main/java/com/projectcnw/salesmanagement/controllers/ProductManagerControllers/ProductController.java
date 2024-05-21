@@ -3,14 +3,18 @@ package com.projectcnw.salesmanagement.controllers.ProductManagerControllers;
 import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
+import com.projectcnw.salesmanagement.dto.SalesChannelDTO.PublishProductDTO;
+import com.projectcnw.salesmanagement.dto.SalesChannelDTO.PublishProductResponseDTO;
 import com.projectcnw.salesmanagement.dto.productDtos.AttributeDto;
 import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.NonJPARepository.impl.NonJpaProductRepository;
+import com.projectcnw.salesmanagement.services.BaseProductSalesChannelService.BaseProductSalesChannelService;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.BaseProductService;
 import com.projectcnw.salesmanagement.services.ProductManagerServices.VariantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +27,7 @@ public class ProductController extends BaseController {
     private final BaseProductService baseProductService;
     private final NonJpaProductRepository nonJpaProductRepository;
     private final VariantService variantService;
+    private final BaseProductSalesChannelService baseProductSalesChannelService;
 
     //
     //viewListProducts
@@ -33,10 +38,11 @@ public class ProductController extends BaseController {
                                                                  @RequestParam(name = "query", defaultValue = "") String query,
                                                                  @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
                                                                  @RequestParam(name = "startDate", defaultValue = "") String startDate,
-                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate
+                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate,
+                                                                 @RequestParam(name = "channel", defaultValue = "") String channels
     ) {
-        List<BaseProductDto> products = baseProductService.getAll(page, size, query, categoryIds, startDate, endDate);
-        long totalItems = baseProductService.countProducts(page, size, query, categoryIds, startDate, endDate);
+        List<BaseProductDto> products = baseProductService.getAll(page, size, query, categoryIds, startDate, endDate, channels);
+        long totalItems = baseProductService.countProducts(page, size, query, categoryIds, startDate, endDate, channels);
         int totalPages = (int) Math.ceil((double) totalItems / size);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)
@@ -177,5 +183,21 @@ public class ProductController extends BaseController {
                 .message("Success")
                 .data(baseProductDtos)
                 .build());
+    }
+
+    @PostMapping("/base-products/publish")
+    public ResponseEntity<ResponseObject> publishProduct(@RequestBody PublishProductDTO publishProductDTO) {
+        return baseProductSalesChannelService.publishProduct(publishProductDTO);
+    }
+
+    @GetMapping("/base-products/{productId}/sales-channels")
+    public ResponseEntity<ResponseObject> getProductSalesChannels(@PathVariable Integer productId) {
+        return baseProductSalesChannelService.getProductSalesChannels(productId);
+    }
+
+    @PostMapping("/base-products/publish-all")
+    public ResponseEntity<Void> publishAllUnpublishedProducts() {
+        baseProductSalesChannelService.publishAllUnpublishedProducts();
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 }

@@ -5,6 +5,7 @@ import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.orderDtos.*;
 import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.CreateOrderDto;
 import com.projectcnw.salesmanagement.models.OrderLine;
+import com.projectcnw.salesmanagement.repositories.OrderRepositories.NonJPARepository.impl.NonJpaVariantRepositoryImpl;
 import com.projectcnw.salesmanagement.services.OrderServices.OrderService;
 import com.projectcnw.salesmanagement.services.OrderServices.ReturnOrderService;
 import jakarta.validation.Valid;
@@ -27,15 +28,19 @@ public class OrderController {
 
     private final OrderService orderService;
     private final ReturnOrderService returnOrderService;
+    private final NonJpaVariantRepositoryImpl nonJpaVariantRepository;
 
 
     @GetMapping
     public ResponseEntity<PagedResponseObject> getOrderList(@RequestParam(value = "page", defaultValue = "0") @Valid int page,
                                                             @RequestParam(value = "size", defaultValue = "10") @Valid int size,
+                                                            @RequestParam(name = "channels", defaultValue = "") String channels,
+                                                            @RequestParam(name = "startDate", defaultValue = "") String startDate,
+                                                            @RequestParam(name = "endDate", defaultValue = "") String endDate,
                                                             @RequestParam(defaultValue = "") String search) {
-        long totalItems = orderService.countTotalOrders();
+        long totalItems = orderService.countOrderFilter(search, startDate, endDate, channels);
         int totalPages = (int) Math.ceil((double) totalItems / size);
-        List<OrderListItemDto> orders = orderService.getOrderList(page, size, search);
+        List<OrderListItemDto> orders = orderService.getOrderList(page, size,search, startDate, endDate, channels);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)
                 .perPage(size)

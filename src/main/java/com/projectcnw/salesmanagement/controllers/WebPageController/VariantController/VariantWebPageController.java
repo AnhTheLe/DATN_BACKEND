@@ -33,11 +33,12 @@ public class VariantWebPageController {
                                                                  @RequestParam(name = "startDate", defaultValue = "") String startDate,
                                                                  @RequestParam(name = "endDate", defaultValue = "") String endDate,
                                                                  @RequestParam(name = "sort_by", defaultValue = "created_at") String sortBy,
-                                                                 @RequestParam(name = "order", defaultValue = "desc") String order
+                                                                 @RequestParam(name = "order", defaultValue = "desc") String order,
+                                                                 @RequestParam(name = "channels", defaultValue = "") String channels
 
     ) {
-        List<VariantSaleResponse> products = variantService.getAllVariantsFilter(page, size, query, categoryIds, startDate, endDate, sortBy, order);
-        long totalItems = variantService.countVariantWebPage(query, categoryIds, startDate, endDate);
+        List<VariantSaleResponse> products = variantService.getAllVariantsFilter(page, size, query, categoryIds, startDate, endDate, sortBy, order, channels);
+        long totalItems = variantService.countVariantWebPage(query, categoryIds, startDate, endDate, channels);
         int totalPages = (int) Math.ceil((double) totalItems / size);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)

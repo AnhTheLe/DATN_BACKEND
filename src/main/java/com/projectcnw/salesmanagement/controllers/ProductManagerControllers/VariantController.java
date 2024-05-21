@@ -35,6 +35,32 @@ public class VariantController extends BaseController {
                 .data(variantDtos)
                 .build());
     }
+    @GetMapping("/base-products/variants/filter")
+    public ResponseEntity<PagedResponseObject> getAllBaseProduct(@RequestParam(name = "page", defaultValue = "1") int page,
+                                                                 @RequestParam(name = "size", defaultValue = "10") int size,
+                                                                 @RequestParam(name = "query", defaultValue = "") String query,
+                                                                 @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
+                                                                 @RequestParam(name = "startDate", defaultValue = "") String startDate,
+                                                                 @RequestParam(name = "endDate", defaultValue = "") String endDate,
+                                                                 @RequestParam(name = "sort_by", defaultValue = "created_at") String sortBy,
+                                                                 @RequestParam(name = "order", defaultValue = "desc") String order,
+                                                                 @RequestParam(name = "channels", defaultValue = "") String channels
+
+    ) {
+        List<VariantSaleResponse> products = variantService.getAllVariantsFilter(page, size, query, categoryIds, startDate, endDate, sortBy, order, channels);
+        long totalItems = variantService.countVariantWebPage(query, categoryIds, startDate, endDate, channels);
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        return ResponseEntity.ok(PagedResponseObject.builder()
+                .page(page)
+                .perPage(size)
+                .totalItems(totalItems)
+                .totalPages(totalPages)
+                .responseCode(200)
+                .message("Success")
+                .data(products)
+                .build());
+    }
+
 
     @GetMapping("base-products/variants/search")
     public ResponseEntity<ResponseObject> getAllVariantsByKeyword(@RequestParam(name = "keyword") String keyword) {

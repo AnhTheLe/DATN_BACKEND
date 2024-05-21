@@ -104,6 +104,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PUT, "/admin/promotion/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
                         .requestMatchers(HttpMethod.DELETE, "/admin/promotion/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
 
+                        .requestMatchers(HttpMethod.GET, "/admin/sales-channels/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
+                        .requestMatchers(HttpMethod.POST, "/admin/sales-channels/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
+                        .requestMatchers(HttpMethod.PUT, "/admin/sales-channels/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
+                        .requestMatchers(HttpMethod.DELETE, "/admin/sales-channels/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name())
+
                         .requestMatchers(HttpMethod.POST, "/admin/payment/**").hasAnyAuthority(RoleType.ADMIN.name(), RoleType.SALE.name(), RoleType.WAREHOUSE.name())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

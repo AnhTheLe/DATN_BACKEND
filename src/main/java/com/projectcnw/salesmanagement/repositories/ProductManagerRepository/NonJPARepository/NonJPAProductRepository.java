@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface NonJPAProductRepository {
-    List<BaseProduct> getAllProduct(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate);
+    List<BaseProduct> getAllProduct(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, List<String> channels);
 
-    int countProducts(int page, int size, String query, List<Integer> categoryIdList, LocalDateTime startDate, LocalDateTime endDate);
+    int countProducts(int page, int size, String query, List<Integer> categoryIdList, LocalDateTime startDate, LocalDateTime endDate, List<String> channels);
 }

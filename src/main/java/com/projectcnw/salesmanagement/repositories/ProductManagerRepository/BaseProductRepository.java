@@ -8,10 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
+@Repository
 public interface BaseProductRepository extends JpaRepository<BaseProduct, Integer> {
 
     // lấy danh sách base-product
@@ -99,7 +102,9 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
 
     BaseProduct save(BaseProductDto baseProductDto);
 
-    BaseProduct findById(int baseId);
+    BaseProduct findById(int id);
+
+    Optional<BaseProduct> findBaseProductByIdAndIsDeleted_False(int baseId);
 
     @Transactional
     @Modifying

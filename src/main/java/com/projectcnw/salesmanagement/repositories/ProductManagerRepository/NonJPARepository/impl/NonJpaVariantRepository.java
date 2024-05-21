@@ -19,35 +19,59 @@ public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.r
     private final EntityManager entityManager;
 
     @Override
-    public List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order) {
+    public List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order, List<String> channels) {
         String baseQuery = "SELECT v.* " +
                 "FROM variant v " +
                 "LEFT JOIN base_product bp ON bp.id = v.base_id AND bp.is_deleted = false ";
-        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, sortBy, order);
+        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, sortBy, order, channels);
         productQuery.setFirstResult((page - 1) * size);
         productQuery.setMaxResults(size);
         return (List<Variant>) productQuery.getResultList();
     }
 
     @Override
-    public int countVariant(String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate) {
+    public int countVariant(String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, List<String> channels) {
         String baseQuery = "SELECT v.* " +
                 "FROM variant v " +
                 "LEFT JOIN base_product bp ON bp.id = v.base_id AND bp.is_deleted = false ";
-        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, "created_at", "desc");
+        Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, "created_at", "desc", channels);
         productQuery.setFirstResult(0);
         return productQuery.getResultList().size();
     }
 
-    private Query buildNativeQuery(String baseQuery, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order) {
+    private Query buildNativeQuery(String baseQuery, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order, List<String> channels) {
         StringBuilder filterQuery = new StringBuilder(baseQuery);
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            filterQuery.append("INNER JOIN product_category bpc ON bp.id = bpc.product_id " +
-                    "INNER JOIN category c ON bpc.category_id = c.id " +
-                    "WHERE c.id IN (:categoryIds) AND v.is_deleted = false ");
-        } else {
-            filterQuery.append("WHERE v.is_deleted = false ");
+        boolean whereAdded = false;
+
+        if (channels != null && !channels.isEmpty()) {
+            filterQuery.append(" INNER JOIN base_product_sales_channel bpsc ON bp.id = bpsc.base_product_id " +
+                    "INNER JOIN sales_channel sc ON bpsc.sales_channel_id = sc.id ");
+            if (!whereAdded) {
+                filterQuery.append("WHERE ");
+                whereAdded = true;
+            }
+            filterQuery.append("sc.code IN (:channels) AND bpsc.active = true ");
         }
+
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            filterQuery.append(" INNER JOIN product_category bpc ON bp.id = bpc.product_id " +
+                    "INNER JOIN category c ON bpc.category_id = c.id ");
+            if (!whereAdded) {
+                filterQuery.append("WHERE ");
+                whereAdded = true;
+            } else {
+                filterQuery.append("AND ");
+            }
+            filterQuery.append("c.id IN (:categoryIds) ");
+        }
+
+        if (!whereAdded) {
+            filterQuery.append("WHERE v.is_deleted = false ");
+            whereAdded = true;
+        } else {
+            filterQuery.append("AND v.is_deleted = false ");
+        }
+
         if (startDate != null) {
             filterQuery.append("AND v.created_at >= :startDate ");
         }
@@ -57,13 +81,19 @@ public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.r
         if (query != null && !query.isEmpty()) {
             filterQuery.append("AND v.name LIKE :query ");
         }
+
         filterQuery.append("GROUP BY v.id, v.name, v.is_deleted ");
-        if(sortBy.equals("price")){
-            filterQuery.append("ORDER BY v.").append("retail_price").append(" ").append(order.toUpperCase());
+        if ("price".equals(sortBy)) {
+            filterQuery.append("ORDER BY v.retail_price ").append(order.toUpperCase());
         } else {
             filterQuery.append("ORDER BY v.").append(sortBy).append(" ").append(order.toUpperCase());
         }
+
         Query productQuery = entityManager.createNativeQuery(filterQuery.toString(), Variant.class);
+
+        if (channels != null && !channels.isEmpty()) {
+            productQuery.setParameter("channels", channels);
+        }
         if (categoryIds != null && !categoryIds.isEmpty()) {
             productQuery.setParameter("categoryIds", categoryIds);
         }
@@ -76,6 +106,8 @@ public class NonJpaVariantRepository implements com.projectcnw.salesmanagement.r
         if (query != null && !query.isEmpty()) {
             productQuery.setParameter("query", "%" + query + "%");
         }
+
         return productQuery;
     }
+
 }

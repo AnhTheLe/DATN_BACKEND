@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NonJpaVariantRepository {
-    List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order);
+    List<Variant> getAllVariantsFilter(int page, int size, String query, List<Integer> categoryIds, LocalDateTime startDate, LocalDateTime endDate, String sortBy, String order, List<String> channels);
 
-    int countVariant(String query, List<Integer> categoryIdList, LocalDateTime startDate, LocalDateTime endDate);
+    int countVariant(String query, List<Integer> categoryIdList, LocalDateTime startDate, LocalDateTime endDate,List<String> channels);
 }

@@ -7,20 +7,20 @@ import com.projectcnw.salesmanagement.dto.orderDtos.createOrder.OrderVariant;
 import com.projectcnw.salesmanagement.exceptions.BadRequestException;
 import com.projectcnw.salesmanagement.exceptions.NotFoundException;
 import com.projectcnw.salesmanagement.models.Auth.UserEntity;
-import com.projectcnw.salesmanagement.models.Customer;
-import com.projectcnw.salesmanagement.models.Order;
-import com.projectcnw.salesmanagement.models.OrderLine;
-import com.projectcnw.salesmanagement.models.Payment;
+import com.projectcnw.salesmanagement.models.*;
 import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.OrderType;
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;
 import com.projectcnw.salesmanagement.repositories.CustomerRepositories.CustomerRepository;
+import com.projectcnw.salesmanagement.repositories.OrderRepositories.NonJPARepository.impl.NonJpaVariantRepositoryImpl;
 import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderLineRepository;
 import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderRepository;
 import com.projectcnw.salesmanagement.repositories.PaymentRepository;
 import com.projectcnw.salesmanagement.repositories.ProductManagerRepository.VariantRepository;
+import com.projectcnw.salesmanagement.repositories.SaleChannelRepository.SalesChannelRepository;
 import com.projectcnw.salesmanagement.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,11 +31,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -49,6 +56,12 @@ public class OrderService {
     private final VariantRepository variantRepository;
 
     private final UserRepository userRepository;
+
+    private final SalesChannelRepository salesChannelRepository;
+
+    private final ModelMapper modelMapper;
+
+    private final NonJpaVariantRepositoryImpl nonJpaVariantRepository;
 
     public long countTotalOrders() {
         return orderRepository.count();
@@ -142,12 +155,69 @@ public class OrderService {
         return result;
     }
 
+    public int countOrderFilter (String search, String start_date, String end_date, String channels) {
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
 
-    public List<OrderListItemDto> getOrderList(int page, int size, String search) {
-        ModelMapper modelMapper = new ModelMapper();
-        Pageable paging = PageRequest.of(page, size);
-        Page<IOrderListItemDto> orderListPage = orderRepository.getOrderList(search, paging);
-        return Arrays.asList(modelMapper.map(orderListPage.getContent(), OrderListItemDto[].class));
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        if (end_date != null && !end_date.isEmpty()) {
+            try {
+                endDate = LocalDate.parse(end_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX);
+                ;
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+        return nonJpaVariantRepository.countOrder(search, startDate, endDate, channelList);
+    }
+
+    public List<OrderListItemDto> getOrderList(int page, int size, String search, String start_date, String end_date, String channels) {
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+
+        if (start_date != null && !start_date.isEmpty()) {
+            try {
+                startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+
+        if (end_date != null && !end_date.isEmpty()) {
+            try {
+                endDate = LocalDate.parse(end_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.MAX);
+                ;
+            } catch (DateTimeParseException e) {
+                log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
+            }
+        }
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
+
+        List<Order> orderListPage = nonJpaVariantRepository.getOrderFilter(page, size, search,startDate, endDate, channelList);
+
+        List<OrderListItemDto> orderListItemDtos = new ArrayList<>();
+        for (Order order : orderListPage) {
+            OrderListItemDto orderListItemDto = new OrderListItemDto();
+            Payment payment = paymentRepository.findPaymentByOrderIdAndOrderType(order.getId(), OrderType.ORDER);
+            orderListItemDto.setOrderId(order.getId());
+            orderListItemDto.setCustomerName(order.getCustomerName());
+            orderListItemDto.setPhone(order.getPhone());
+            orderListItemDto.setCreatedAt(order.getCreatedAt());
+            orderListItemDto.setSalesChannelName(order.getSalesChannel().getName());
+            orderListItemDto.setAmount(payment == null ? 0 : payment.getAmount());
+            orderListItemDto.setPaymentStatus(payment == null ? null : payment.getPaymentStatus());
+            orderListItemDtos.add(orderListItemDto);
+        }
+
+        return orderListItemDtos;
     }
 
 //    public List<OrderListByCustomer> getOrderListByCustomerId(int customerId) {
@@ -238,6 +308,8 @@ public class OrderService {
 
         UserEntity user = userRepository.findByPhone(staffPhone).orElseThrow(() -> new NotFoundException("user's phone " + staffPhone + " not found"));
 
+        Optional<SalesChannel> salesChannelPOS = salesChannelRepository.findSalesChannelByCode("POS");
+
         Order order = Order.builder()
                 .discount(createOrderDto.getDiscount())
                 .userEntity(user)
@@ -245,6 +317,7 @@ public class OrderService {
                 .customerName(createOrderDto.getCustomerName())
                 .address(createOrderDto.getAddress())
                 .phone(createOrderDto.getPhone())
+                .salesChannel(salesChannelPOS.orElse(null))
                 .build();
 
         List<OrderVariant> orderVariantList = createOrderDto.getOrderVariantList();
@@ -299,6 +372,7 @@ public class OrderService {
             customer = customerRepository.findByPhone("-1");
         }
 
+        Optional<SalesChannel> salesChannelPOS = salesChannelRepository.findSalesChannelByCode("WEB");
 
         Order order = Order.builder()
                 .discount(createOrderDto.getDiscount())
@@ -306,6 +380,7 @@ public class OrderService {
                 .customerName(createOrderDto.getCustomerName())
                 .address(createOrderDto.getAddress())
                 .phone(createOrderDto.getPhone())
+                .salesChannel(salesChannelPOS.orElse(null))
                 .build();
 
         List<OrderVariant> orderVariantList = createOrderDto.getOrderVariantList();
@@ -379,7 +454,7 @@ public class OrderService {
 
     public ResponseEntity<ResponseObject> getOrderDetail(int id) {
         Optional<Order> orderDetail = orderRepository.findById(id);
-        if(orderDetail.isEmpty()) {
+        if (orderDetail.isEmpty()) {
             return ResponseEntity.ok(ResponseObject.builder()
                     .message("order not found")
                     .responseCode(404)

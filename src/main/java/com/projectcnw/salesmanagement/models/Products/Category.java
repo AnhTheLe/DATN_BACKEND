@@ -20,6 +20,8 @@ public class Category extends BaseEntity {
     private String title;
     private String metaTitle;
     private String slug;
+
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)

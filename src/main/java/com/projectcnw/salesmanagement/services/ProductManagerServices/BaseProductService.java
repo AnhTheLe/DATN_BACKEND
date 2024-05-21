@@ -28,6 +28,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.projectcnw.salesmanagement.utils.Utils.mapListCategoryToListCategoryResponse;
 
@@ -49,8 +50,9 @@ public class BaseProductService {
     private ModelMapper modelMapper = new ModelMapper();
 
 
-    public List<BaseProductDto> getAll(int page, int size, String query, String categoryIds, String start_date, String end_date) {
+    public List<BaseProductDto> getAll(int page, int size, String query, String categoryIds, String start_date, String end_date, String channels) {
         List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
 
@@ -71,7 +73,7 @@ public class BaseProductService {
             }
         }
 
-        List<BaseProduct> iBaseProductDtos = nonJPAProductRepository.getAllProduct(page, size, query, categoryIdList, startDate, endDate);
+        List<BaseProduct> iBaseProductDtos = nonJPAProductRepository.getAllProduct(page, size, query, categoryIdList, startDate, endDate, channelList);
 
         List<BaseProductDto> baseProducts = new ArrayList<>();
         for (BaseProduct baseProduct : iBaseProductDtos) {
@@ -92,8 +94,9 @@ public class BaseProductService {
 //        return new PageImpl<>(baseProducts, pageable, baseProducts.size());
     }
 
-    public int countProducts(int page, int size, String query, String categoryIds, String start_date, String end_date) {
+    public int countProducts(int page, int size, String query, String categoryIds, String start_date, String end_date, String channels) {
         List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
 
@@ -114,7 +117,7 @@ public class BaseProductService {
             }
         }
 
-        return nonJPAProductRepository.countProducts(page, size, query, categoryIdList, startDate, endDate);
+        return nonJPAProductRepository.countProducts(page, size, query, categoryIdList, startDate, endDate, channelList);
     }
 
     public List<VariantDto> getAllVariantOfBaseProductByBaseId(int baseId) {
@@ -247,7 +250,7 @@ public class BaseProductService {
 
     @Transactional
     public BaseProductDto updateBaseProduct(int baseId, BaseProductDto baseProductDto) {
-        BaseProduct baseProduct = baseProductRepository.findById(baseId);
+        BaseProduct baseProduct = baseProductRepository.findBaseProductByIdAndIsDeleted_False(baseId).orElse(null);
         if (baseProduct == null) throw new ProductException("Không tìm thấy sản phẩm");
         if (baseProductDto.getName() == null || baseProductDto.getName().isBlank())
             throw new ProductException("Tên sản phẩm không được trống");
@@ -256,7 +259,7 @@ public class BaseProductService {
             updateProductCategories(baseProduct, categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
         }
         baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel(), baseProduct.getDescription());
-        BaseProduct baseProduct1 = baseProductRepository.findById(baseId);
+        BaseProduct baseProduct1 = baseProductRepository.findBaseProductByIdAndIsDeleted_False(baseId).orElse(null);
 
         BaseProductDto baseProductDto1 = modelMapper.map(baseProduct1, BaseProductDto.class);
         List<Category> categories = categoryRepository.getListCategoryByIds(categoryRepository.getListCategoryIdByProductId(baseId));

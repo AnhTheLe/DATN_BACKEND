@@ -44,4 +44,8 @@ public class Order extends BaseEntity {
 
     @OneToOne(mappedBy = "swapOrder")
     private ReturnOrder returnOrder;
+
+    @ManyToOne
+    @JoinColumn(name = "sales_channel_id")
+    private SalesChannel salesChannel;
 }

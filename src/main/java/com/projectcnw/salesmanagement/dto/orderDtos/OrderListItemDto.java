@@ -1,6 +1,8 @@
 package com.projectcnw.salesmanagement.dto.orderDtos;
 
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;
+import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,14 +13,10 @@ import java.sql.Timestamp;
 public class OrderListItemDto {
 
     private int orderId;
-
     private Timestamp createdAt;
-
     private String customerName;
-
     private String phone;
-
     private PaymentStatus paymentStatus;
-
     private int amount;
+    private String salesChannelName;
 }

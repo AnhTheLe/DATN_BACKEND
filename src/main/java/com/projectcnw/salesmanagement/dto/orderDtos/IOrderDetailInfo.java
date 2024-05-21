@@ -27,4 +27,6 @@ public interface IOrderDetailInfo {
     Integer getReturnOrderId();
 
     Integer getReturnAmount();
+
+    String getSaleChannel();
 }

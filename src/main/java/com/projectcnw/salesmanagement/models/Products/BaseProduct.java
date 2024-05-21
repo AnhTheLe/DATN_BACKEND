@@ -3,6 +3,7 @@ package com.projectcnw.salesmanagement.models.Products;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.projectcnw.salesmanagement.models.BaseEntity;
 import com.projectcnw.salesmanagement.models.Promotion;
+import com.projectcnw.salesmanagement.models.SalesChannel;
 import com.projectcnw.salesmanagement.models.Shop;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -48,5 +49,9 @@ public class BaseProduct extends BaseEntity {
     @ManyToMany(mappedBy = "products")
     @JsonBackReference
     private List<Promotion> promotions;
+
+    @ManyToMany(mappedBy = "products", fetch = FetchType.EAGER)
+    @JsonBackReference
+    private List<SalesChannel> salesChannels;
 
 }

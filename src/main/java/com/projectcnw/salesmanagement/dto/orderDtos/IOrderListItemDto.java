@@ -16,5 +16,7 @@ public interface IOrderListItemDto {
 
     PaymentStatus getPaymentStatus();
 
+    String getSalesChannelName();
+
     int getAmount();
 }

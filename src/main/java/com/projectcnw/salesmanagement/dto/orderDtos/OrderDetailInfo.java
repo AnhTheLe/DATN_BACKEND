@@ -1,5 +1,6 @@
 package com.projectcnw.salesmanagement.dto.orderDtos;
 
+import com.projectcnw.salesmanagement.models.SalesChannel;
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,4 +32,6 @@ public class OrderDetailInfo {
     private Integer returnOrderId;
 
     private Integer returnAmount;
+
+    private SalesChannel saleChannel;
 }

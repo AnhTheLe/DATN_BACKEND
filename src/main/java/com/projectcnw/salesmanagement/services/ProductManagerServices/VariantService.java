@@ -58,8 +58,9 @@ public class VariantService {
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
-    public List<VariantSaleResponse> getAllVariantsFilter(int page, int size, String query, String categoryIds, String start_date, String end_date, String sort_by, String order) {
+    public List<VariantSaleResponse> getAllVariantsFilter(int page, int size, String query, String categoryIds, String start_date, String end_date, String sort_by, String order, String channels) {
         List<Integer> categoryIdList = categoryIds == null || categoryIds.isEmpty() ? null : Arrays.stream(categoryIds.split(",")).map(Integer::parseInt).toList();
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
 
@@ -79,7 +80,7 @@ public class VariantService {
                 log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
             }
         }
-        List<Variant> iVariantDtos = nonJpaVariantRepository.getAllVariantsFilter(page, size, query, categoryIdList, startDate, endDate, sort_by, order);
+        List<Variant> iVariantDtos = nonJpaVariantRepository.getAllVariantsFilter(page, size, query, categoryIdList, startDate, endDate, sort_by, order, channelList);
         return getListVariantResponseFromVariant(iVariantDtos);
     }
 
@@ -178,9 +179,11 @@ public class VariantService {
         return discountedPrice;
     }
 
-    public long countVariantWebPage(String query, String categoryIds, String start_date, String end_date) {
+    public long countVariantWebPage(String query, String categoryIds, String start_date, String end_date, String channels) {
 
         List<Integer> categoryIdList = categoryIds == null || categoryIds.equals("") ? null : Arrays.asList(categoryIds.split(",")).stream().map(Integer::parseInt).toList();
+        List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
+
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
 
@@ -200,7 +203,7 @@ public class VariantService {
                 log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
             }
         }
-        return nonJpaVariantRepository.countVariant(query, categoryIdList, startDate, endDate);
+        return nonJpaVariantRepository.countVariant(query, categoryIdList, startDate, endDate, channelList);
     }
 
     public long countVariant() {

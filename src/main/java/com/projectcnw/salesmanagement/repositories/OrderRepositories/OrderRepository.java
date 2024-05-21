@@ -2,6 +2,7 @@ package com.projectcnw.salesmanagement.repositories.OrderRepositories;
 
 import com.projectcnw.salesmanagement.dto.orderDtos.IOrderDetailInfo;
 import com.projectcnw.salesmanagement.dto.orderDtos.IOrderListItemDto;
+import com.projectcnw.salesmanagement.dto.orderDtos.OrderListItemDto;
 import com.projectcnw.salesmanagement.dto.orderDtos.OrderStatistical;
 import com.projectcnw.salesmanagement.models.Order;
 import com.projectcnw.salesmanagement.models.OrderLine;
@@ -14,20 +15,47 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Integer> {
+public interface
+OrderRepository extends JpaRepository<Order, Integer> {
 
-    @Query(value = "select o.id as orderId, o.created_at as createdAt, c.name as customerName, c.phone as phone," +
-            " p.payment_status as paymentStatus, p.amount as amount" +
-            " from _order o, customer c, payment p" +
-            " where o.customer_id = c.id and p.order_id = o.id" +
-            " and p.order_type = 'ORDER'" +
-            " and (convert(o.id, char) like concat('%', lower(:search), '%')" +
-            " or lower(c.name) like concat('%', lower(:search), '%')" +
-            " or lower(c.phone) like concat('%', lower(:search), '%'))" +
-            " order by o.created_at desc", nativeQuery = true)
-    Page<IOrderListItemDto> getOrderList(@Param("search") String search, Pageable paging);
+//    @Query(value = "SELECT o.id AS order_id, o.created_at AS created_at, c.name AS customer_name, c.phone AS phone, " +
+//            "p.payment_status AS payment_status, p.amount AS amount, COALESCE(sc.name, 'Unknown') AS sales_channel_name " +
+//            "FROM _order o " +
+//            "JOIN customer c ON o.customer_id = c.id " +
+//            "JOIN payment p ON p.order_id = o.id " +
+//            "LEFT JOIN sales_channel sc ON o.sales_channel_id = sc.id " +
+//            "WHERE p.order_type = 'ORDER' " +
+//            "AND (CAST(o.id AS CHAR) LIKE %:search% " +
+//            "OR LOWER(c.name) LIKE %:search% " +
+//            "OR LOWER(c.phone) LIKE %:search%) " +
+//            "ORDER BY o.created_at DESC",
+//            countQuery = "SELECT COUNT(*) FROM _order o " +
+//                    "JOIN customer c ON o.customer_id = c.id " +
+//                    "JOIN payment p ON p.order_id = o.id " +
+//                    "LEFT JOIN sales_channel sc ON o.sales_channel_id = sc.id " +
+//                    "WHERE p.order_type = 'ORDER' " +
+//                    "AND (CAST(o.id AS CHAR) LIKE %:search% " +
+//                    "OR LOWER(c.name) LIKE %:search% " +
+//                    "OR LOWER(c.phone) LIKE %:search%)",
+//            nativeQuery = true)
+//    Page<Object[]> getOrderList(@Param("search") String search, Pageable pageable);
+
+//    @Query(value = "select o.id as orderId, o.created_at as createdAt, c.name as customerName, c.phone as phone," +
+//            " p.payment_status as paymentStatus, p.amount as amount, sc.name as salesChannelName" +
+//            " from _order o, customer c, payment p, sales_channel sc " +
+//            " where o.customer_id = c.id and p.order_id = o.id" +
+//            " and (o.sales_channel_id = sc.id or o.sales_channel_id is null)" +
+//            " and p.order_type = 'ORDER'" +
+//            " and (convert(o.id, char) like concat('%', lower(:search), '%')" +
+//            " or lower(c.name) like concat('%', lower(:search), '%')" +
+//            " or lower(c.phone) like concat('%', lower(:search), '%'))" +
+//            " and (:listSaleChannel is null or sc.code in :listSaleChannel)" +
+//            " order by o.created_at desc", nativeQuery = true)
+//    Page<IOrderListItemDto> getOrderList(@Param("search") String search,@Param("listSaleChannel") List<String> listSaleChannel, Pageable paging);
+
 
     @Query(value = "SELECT" +
             " o.id AS id," +

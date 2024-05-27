@@ -28,9 +28,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
             "(SELECT SUM(p.amount) FROM payment p WHERE p.order_id IN (SELECT o.id FROM _order o WHERE o.customer_id = c.id)) AS total_amount, " +
             "(SELECT COUNT(DISTINCT o.id) FROM _order o WHERE o.customer_id = c.id) AS order_count " +
             "FROM customer c " +
+            "WHERE c.name LIKE %:search% OR c.phone LIKE %:search% " +
             "ORDER BY c.id DESC " +
             "LIMIT :size OFFSET :offset", nativeQuery = true)
-    List<Object[]> findAllCustomerBySpending(@Param("size") int size, @Param("offset") int offset);
+    List<Object[]> findAllCustomerBySpending(@Param("size") int size, @Param("offset") int offset, @Param("search") String search);
 
     Optional<Customer> findByPhone(String phone);
 

@@ -54,11 +54,12 @@ public class CustomerController extends BaseController {
     //lấy danh sách khách hàng theo chi tiêu
     @GetMapping("/customer/spending")
     public ResponseEntity<PagedResponseObject> getAllCustomerBySpending(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                                        @RequestParam(value = "size", defaultValue = "10") int size) {
+                                                                        @RequestParam(value = "size", defaultValue = "10") int size,
+                                                                        @RequestParam(value = "query", defaultValue = "") String search) {
 
         long totalItems = customerServices.countCustomer();
         int totalPages = (int) Math.ceil((double) totalItems / size);
-        List<CustomerSpendingDTO> customers = customerServices.getAllCustomerBySpending(page, size);
+        List<CustomerSpendingDTO> customers = customerServices.getAllCustomerBySpending(page, size, search);
         return ResponseEntity.ok(PagedResponseObject.builder()
                 .page(page)
                 .perPage(size)

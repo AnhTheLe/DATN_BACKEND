@@ -31,7 +31,6 @@ public class CustomerServices {
     private final CustomerRepository customerRepository;
 
     private final AddressRepository addressRepository;
-    private ModelMapper modelMapper = new ModelMapper();
 
     public List<Customer> getAllCustomer(int page, int size) {
         int offset = (page - 1) * size;
@@ -39,9 +38,9 @@ public class CustomerServices {
         return customerList;
     }
 
-    public List<CustomerSpendingDTO> getAllCustomerBySpending(int page, int size) {
+    public List<CustomerSpendingDTO> getAllCustomerBySpending(int page, int size, String search) {
         int offset = (page - 1) * size;
-        List<Object[]> customerDataList = customerRepository.findAllCustomerBySpending(size, offset);
+        List<Object[]> customerDataList = customerRepository.findAllCustomerBySpending(size, offset, search);
 
         List<CustomerSpendingDTO> customerList = new ArrayList<>();
 

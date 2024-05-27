@@ -10,4 +10,6 @@ import java.util.List;
 public interface BaseProductSalesChannelRepository extends JpaRepository<BaseProductSalesChannel, Long> {
 
     List<BaseProductSalesChannel> findByBaseProduct_Id(Integer id);
+
+    BaseProductSalesChannel findByBaseProduct_IdAndSalesChannel_Id(Integer baseProduct_id, Integer salesChannel_id);
 }

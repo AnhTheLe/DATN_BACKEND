@@ -12,7 +12,7 @@ import com.projectcnw.salesmanagement.models.Products.Variant;
 import com.projectcnw.salesmanagement.models.enums.OrderType;
 import com.projectcnw.salesmanagement.models.enums.PaymentStatus;
 import com.projectcnw.salesmanagement.repositories.CustomerRepositories.CustomerRepository;
-import com.projectcnw.salesmanagement.repositories.OrderRepositories.NonJPARepository.impl.NonJpaVariantRepositoryImpl;
+import com.projectcnw.salesmanagement.repositories.OrderRepositories.NonJPARepository.impl.NonJpaOrderRepositoryImpl;
 import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderLineRepository;
 import com.projectcnw.salesmanagement.repositories.OrderRepositories.OrderRepository;
 import com.projectcnw.salesmanagement.repositories.PaymentRepository;
@@ -22,16 +22,12 @@ import com.projectcnw.salesmanagement.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -61,7 +57,7 @@ public class OrderService {
 
     private final ModelMapper modelMapper;
 
-    private final NonJpaVariantRepositoryImpl nonJpaVariantRepository;
+    private final NonJpaOrderRepositoryImpl nonJpaVariantRepository;
 
     public long countTotalOrders() {
         return orderRepository.count();
@@ -155,11 +151,11 @@ public class OrderService {
         return result;
     }
 
-    public int countOrderFilter (String search, String start_date, String end_date, String channels) {
+    public int countOrderFilter(String search, String start_date, String end_date, String channels, String status) {
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
         List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
-
+        List<String> statusList = status == null || status.isEmpty() ? null : Arrays.stream(status.split(",")).toList();
         if (start_date != null && !start_date.isEmpty()) {
             try {
                 startDate = LocalDate.parse(start_date, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
@@ -176,10 +172,10 @@ public class OrderService {
                 log.error("Không thể chuyển đổi start_date thành LocalDateTime", e);
             }
         }
-        return nonJpaVariantRepository.countOrder(search, startDate, endDate, channelList);
+        return nonJpaVariantRepository.countOrder(search, startDate, endDate, channelList, statusList);
     }
 
-    public List<OrderListItemDto> getOrderList(int page, int size, String search, String start_date, String end_date, String channels) {
+    public List<OrderListItemDto> getOrderList(int page, int size, String search, String start_date, String end_date, String channels, String status) {
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
 
@@ -200,16 +196,16 @@ public class OrderService {
             }
         }
         List<String> channelList = channels == null || channels.isEmpty() ? null : Arrays.stream(channels.split(",")).toList();
-
-        List<Order> orderListPage = nonJpaVariantRepository.getOrderFilter(page, size, search,startDate, endDate, channelList);
+        List<String> statusList = status == null || status.isEmpty() ? null : Arrays.stream(status.split(",")).toList();
+        List<Order> orderListPage = nonJpaVariantRepository.getOrderFilter(page, size, search, startDate, endDate, channelList, statusList);
 
         List<OrderListItemDto> orderListItemDtos = new ArrayList<>();
         for (Order order : orderListPage) {
             OrderListItemDto orderListItemDto = new OrderListItemDto();
             Payment payment = paymentRepository.findPaymentByOrderIdAndOrderType(order.getId(), OrderType.ORDER);
             orderListItemDto.setOrderId(order.getId());
-            orderListItemDto.setCustomerName(order.getCustomerName());
-            orderListItemDto.setPhone(order.getPhone());
+            orderListItemDto.setCustomerName(order.getCustomerName() != null ? order.getCustomerName() : order.getCustomer().getName());
+            orderListItemDto.setPhone(order.getPhone() != null ? order.getPhone() : order.getCustomer().getPhone());
             orderListItemDto.setCreatedAt(order.getCreatedAt());
             orderListItemDto.setSalesChannelName(order.getSalesChannel().getName());
             orderListItemDto.setAmount(payment == null ? 0 : payment.getAmount());

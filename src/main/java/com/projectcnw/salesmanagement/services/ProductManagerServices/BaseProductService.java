@@ -186,6 +186,7 @@ public class BaseProductService {
         if (baseProductDto.getCategoryIds() != null && !baseProductDto.getCategoryIds().isEmpty()) {
             baseProduct.setCategories(categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
         }
+        baseProduct.setVariants(null);
         BaseProduct baseProduct1 = baseProductRepository.save(baseProduct);
 
 //      kiểm tra xem có attribute2, attribute3 không
@@ -258,7 +259,7 @@ public class BaseProductService {
         if (baseProductDto.getCategoryIds() != null && !baseProductDto.getCategoryIds().isEmpty()) {
             updateProductCategories(baseProduct, categoryRepository.getListCategoryByIds(baseProductDto.getCategoryIds()));
         }
-        baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel(), baseProduct.getDescription());
+        baseProductRepository.updateBaseProduct(baseId, baseProductDto.getName(), baseProductDto.getLabel(), baseProductDto.getDescription());
         BaseProduct baseProduct1 = baseProductRepository.findBaseProductByIdAndIsDeleted_False(baseId).orElse(null);
 
         BaseProductDto baseProductDto1 = modelMapper.map(baseProduct1, BaseProductDto.class);

@@ -4,7 +4,6 @@ import com.projectcnw.salesmanagement.controllers.BaseController;
 import com.projectcnw.salesmanagement.dto.PagedResponseObject;
 import com.projectcnw.salesmanagement.dto.ResponseObject;
 import com.projectcnw.salesmanagement.dto.SalesChannelDTO.PublishProductDTO;
-import com.projectcnw.salesmanagement.dto.SalesChannelDTO.PublishProductResponseDTO;
 import com.projectcnw.salesmanagement.dto.productDtos.AttributeDto;
 import com.projectcnw.salesmanagement.dto.productDtos.BaseProductDto;
 import com.projectcnw.salesmanagement.dto.productDtos.VariantDto;
@@ -33,7 +32,7 @@ public class ProductController extends BaseController {
     //viewListProducts
     //lấy danh sách sản phẩm (gồm tồn kho, số phiên bản)
     @GetMapping("/base-products")
-    public ResponseEntity<PagedResponseObject> getAllBaseProduct(@RequestParam(name = "page", defaultValue = "1") int page,
+    public ResponseEntity<PagedResponseObject> getAllBaseProduct(@RequestParam(name = "page", defaultValue = "0") int page,
                                                                  @RequestParam(name = "size", defaultValue = "10") int size,
                                                                  @RequestParam(name = "query", defaultValue = "") String query,
                                                                  @RequestParam(name = "categoryIds", defaultValue = "") String categoryIds,
@@ -199,5 +198,11 @@ public class ProductController extends BaseController {
     public ResponseEntity<Void> publishAllUnpublishedProducts() {
         baseProductSalesChannelService.publishAllUnpublishedProducts();
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PutMapping("/base-products/{productId}/republish")
+    public ResponseEntity<ResponseObject> unpublishProduct(@PathVariable Integer productId, @RequestBody PublishProductDTO publishProductResponseDTO) {
+        return baseProductSalesChannelService.updatePublishProduct(productId, publishProductResponseDTO);
+
     }
 }

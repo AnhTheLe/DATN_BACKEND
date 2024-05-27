@@ -74,7 +74,8 @@ public interface BaseProductRepository extends JpaRepository<BaseProduct, Intege
             "       COUNT(v.id) AS variantNumber,\n" +
             "       SUM(v.quantity) AS quantity,\n" +
             "       bp.created_at AS createdAt,\n" +
-            "       bp.updated_at AS updatedAt\n" +
+            "       bp.updated_at AS updatedAt,\n" +
+            "       bp.description AS description\n" +
             "FROM base_product bp\n" +
             "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false\n" +
             "GROUP BY bp.id, bp.name, bp.is_deleted HAVING bp.id =:baseId AND bp.is_deleted = false\n", nativeQuery = true)

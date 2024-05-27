@@ -29,6 +29,7 @@ public class BaseProduct extends BaseEntity {
 
     private String attribute3;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     @ManyToOne

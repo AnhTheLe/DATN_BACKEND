@@ -38,7 +38,7 @@ public interface VariantRepository extends JpaRepository<Variant, Integer> {
 
     //getTop10VariantHasPromotion()
     @Query(value = "SELECT v.*\n" +
-            "FROM variant v INNER JOIN promotion_product pp ON v.base_id = pp.product_id INNER JOIN promotion p ON pp.promotion_id = p.id WHERE v.is_deleted = false AND p.active = true ORDER BY p.created_at DESC LIMIT 10"
+            "FROM variant v INNER JOIN promotion_product pp ON v.base_id = pp.product_id INNER JOIN promotion p ON pp.promotion_id = p.id WHERE v.is_deleted = false ORDER BY p.created_at DESC LIMIT 10"
             , nativeQuery = true)
     List<Variant> getTop10VariantHasPromotion();
 

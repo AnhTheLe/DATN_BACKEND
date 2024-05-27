@@ -39,7 +39,7 @@ public class CustomerJwtAuthFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (request.getServletPath().contains("/api/customer/auth")) {
+        if (request.getServletPath().contains("/api/customer/auth") || request.getServletPath().contains("/api/variants") || request.getServletPath().contains("/api/products")) {
             filterChain.doFilter(request, response);
             return;
         }

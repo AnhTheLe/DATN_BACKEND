@@ -26,7 +26,7 @@ public class NonJpaProductRepository implements NonJPAProductRepository {
                 "FROM base_product bp " +
                 "LEFT JOIN variant v ON bp.id = v.base_id AND v.is_deleted = false ";
         Query productQuery = buildNativeQuery(baseQuery, query, categoryIds, startDate, endDate, channels);
-        productQuery.setFirstResult((page - 1) * size);
+        productQuery.setFirstResult((page) * size);
         productQuery.setMaxResults(size);
         return (List<BaseProduct>) productQuery.getResultList();
     }

@@ -86,6 +86,63 @@ public class BaseProductSalesChannelService {
 
     }
 
+    @Transactional
+    public ResponseEntity<ResponseObject> updatePublishProduct (Integer productId, PublishProductDTO publishProductDTO) {
+        BaseProduct product = baseProductRepository.findBaseProductByIdAndIsDeleted_False(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.ok(
+                    ResponseObject.builder().
+                            responseCode(404).
+                            message("Product not found").
+                            build()
+            );
+        }
+
+//        List<BaseProductSalesChannel> productSalesChannels = baseProductSalesChannelRepository.findByBaseProduct_Id(product.getId());
+
+        List<ChannelStatusResponseDTO> listChannelResponse = new ArrayList<>();
+        for (ChannelStatusDTO statusDTO : publishProductDTO.getChannelStatus()) {
+            SalesChannel salesChannel = salesChannelRepository.findById(Long.valueOf(statusDTO.getChannelId())).orElse(null);
+            if (salesChannel == null) {
+                return ResponseEntity.ok(
+                        ResponseObject.builder().
+                                responseCode(404).
+                                message("Channel not found").
+                                build()
+                );
+            }
+
+            BaseProductSalesChannel baseProductSalesChannel = baseProductSalesChannelRepository.findByBaseProduct_IdAndSalesChannel_Id(product.getId(), salesChannel.getId());
+            if (baseProductSalesChannel == null) {
+                baseProductSalesChannel = new BaseProductSalesChannel();
+                baseProductSalesChannel.setBaseProduct(product);
+                baseProductSalesChannel.setSalesChannel(salesChannel);
+            }
+
+            baseProductSalesChannel.setActive(statusDTO.isActive());
+
+            baseProductSalesChannelRepository.save(baseProductSalesChannel);
+
+            listChannelResponse.add(ChannelStatusResponseDTO.builder()
+                    .channelId(salesChannel.getId())
+                    .channelName(salesChannel.getName())
+                    .active(statusDTO.isActive())
+                    .build());
+        }
+
+        PublishProductResponseDTO responseDTO = new PublishProductResponseDTO();
+        responseDTO.setProductId(Long.valueOf(product.getId()));
+        responseDTO.setChannelStatus(listChannelResponse);
+
+        return ResponseEntity.ok(
+                ResponseObject.builder().
+                        responseCode(200).
+                        message("Update publish product successfully").
+                        data(responseDTO).
+                        build()
+        );
+    }
+
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseObject> getProductSalesChannels(Integer productId) {
         BaseProduct product = baseProductRepository.findBaseProductByIdAndIsDeleted_False(productId).orElse(null);
